@@ -123,6 +123,9 @@ def folder_ls(folder_path, includes=None, excludes=None):
 
 
 def _folder_find(folder_path, folders, includes, excludes):
+    if not os.path.exists(folder_path):
+        return
+
     for file in os.listdir(folder_path):
         path = os.path.join(folder_path, file)
         if file_matches(file, excludes):
