@@ -1,9 +1,11 @@
+#!/bin/sh
+
 read -p "ACDC local folder [~/.acdc]: " -r acdc_local_folder
 acdc_local_folder=${acdc_local_folder:-"~/.acdc"}
 acdc_local_folder="${acdc_local_folder/#\~/$HOME}"
 
 # Update toolkit settings
-sed -E 's/(ACDC_LOCAL_FOLDER[^"]+")([^"]+)(.*)/\1'"$acdc_local_folder"'\3/' misc/config.py
+sed -i'' -rE 's;(ACDC_LOCAL_FOLDER = [^"]+")([^"]+)(.*);\1'"$acdc_local_folder"'\3;' misc/config.py
 
 # Create folder structure
 if [ -d $acdc_local_folder ]; then
