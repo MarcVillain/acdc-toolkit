@@ -167,7 +167,6 @@ def exec_in_folder(folder_path, func, *func_args):
 def git_update():
     run_command("git stash")
     res = run_command("git pull")
-    run_command("git stash pop")
     if res.returncode is not 0:
         raise GitException("Cannot pull from " + os.getcwd())
 
