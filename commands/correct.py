@@ -5,6 +5,7 @@ from commands.correct_actions.exit import Exit
 from commands.correct_actions.next import Next
 from commands.correct_actions.previous import Previous
 from commands.correct_actions.copy_files import CopyFiles
+from commands.correct_actions.shell import Shell
 from commands.get import cmd_get
 from misc.config import *
 from misc.helpers import *
@@ -14,6 +15,7 @@ from getkey import platform, keys
 actions = [
     Previous(),
     Next(),
+    Shell(),
     ClearFiles(),
     CopyFiles(),
     Exit(),

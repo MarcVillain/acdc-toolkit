@@ -57,6 +57,10 @@ def run_commands(cmds, cmds_fail=None, cmds_finally=None):
     return ret_val
 
 
+def open_subshell():
+    subprocess.call(["bash"])
+
+
 def get_logins(file, logins=None):
     if logins is None:
         logins = []
