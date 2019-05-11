@@ -3,7 +3,7 @@ import os
 ACDC_YEAR = 2021
 SUP_YEAR = ACDC_YEAR + 2
 
-ACDC_LOCAL_FOLDER = os.path.expanduser("~/afs/.acdc/")
+ACDC_LOCAL_FOLDER = os.path.expanduser("~/.acdc")
 
 TOOLKIT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 
