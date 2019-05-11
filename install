@@ -1,0 +1,40 @@
+read -p "ACDC local folder [~/.acdc]: " -r acdc_local_folder
+acdc_local_folder=${acdc_local_folder:-"~/.acdc"}
+acdc_local_folder="${acdc_local_folder/#\~/$HOME}"
+
+if [ -d $acdc_local_folder ]; then
+    echo "The folder $acdc_local_folder already exists."
+    read -p "Do you want to replace it?(y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -rf $acdc_local_folder
+    else
+        exit 0
+    fi
+fi
+
+mkdir $acdc_local_folder
+mkdir $acdc_local_folder/toolkit
+mv * $acdc_local_folder/toolkit
+
+acdc_alias="cd $acdc_local_folder/toolkit
+pipenv run ./toolkit.py
+if [ \"\$?\" -eq 1 ]; then
+    pipenv install
+    pipenv run ./toolkit.py
+fi"
+
+cat ~/.bashrc | grep 'alias acdc' 1>/dev/null 2>/dev/null
+if [ "$?" -eq 1 ]; then
+    echo -e "# ACDC\nalias acdc='$acdc_alias'" >> ~/.bashrc
+fi
+
+echo '---'
+echo 'Please run the command:'
+echo ''
+echo '  42sh$ source ~/.bashrc'
+echo ''
+echo ''
+echo 'To use the toolkit, run the command:'
+echo ''
+echo '  42sh$ acdc'
