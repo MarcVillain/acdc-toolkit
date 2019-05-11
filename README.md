@@ -2,19 +2,17 @@
 
 ## Information
 
-This toolkit was created to help ACDCs by allowing them to use simple commands to do annoying things.
+This toolkit was created to help ACDCs (Assistant CDieze Caml) by allowing them to use simple commands to do annoying things.
 
 ## Install
 
 Requirements:
 - Python >= 3.6
-- docopt >= 0.6.2
 
 ```
-42sh$ pip install docopt
-42sh$ git clone git@gitlab.com:acdc_epita/toolkit.git
-42sh$ mv toolkit ~/.acdc
-42sh$ echo 'alias acdc=~/.acdc/toolkit'
+42sh$ git clone git@github.com:MarcVillain/acdc-toolkit.git
+42sh$ cd acdc-toolkit
+42sh$ ./install
 ```
 
 ## Run
@@ -29,6 +27,11 @@ Requirements:
 
 Commit format: `tag(name):  message`
 
-- **Tag:** feat, refactor, misc or fix.
-- **Name:** the actual file or the feature (if more precision is needed, just separate with commas).
-- **Message:** Make it short and understandable on its own.
+- **tag:** feat, refactor, misc or fix.
+- **name:** the actual file or the feature (if more precision is needed, just separate with commas).
+- **message:** Make it short and understandable on its own.
+
+## Authors
+
+- Marc Villain (marc.villain@epita.fr)
+- Alex van-Vliet (alex.van-vliet@epita.fr)
