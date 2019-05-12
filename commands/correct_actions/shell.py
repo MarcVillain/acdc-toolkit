@@ -1,7 +1,7 @@
 import os
 
 from misc.helpers import exec_in_folder, run_shell_command
-from misc.printer import print_warning
+from misc.printer import print_warning, print_error
 from . import action
 
 
@@ -14,7 +14,7 @@ class Shell(action.Action):
         print_warning('Press Ctrl+D to get back.')
         print()
 
-        exec_in_folder(os.path.join(login_path),
+        exec_in_folder(login_path,
                        run_shell_command, "bash")
 
     def __str__(self):

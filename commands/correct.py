@@ -7,6 +7,7 @@ from commands.correct_actions.log import Log
 from commands.correct_actions.next import Next
 from commands.correct_actions.previous import Previous
 from commands.correct_actions.copy_files import CopyFiles
+from commands.correct_actions.readme import Readme
 from commands.correct_actions.shell import Shell
 from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
@@ -24,6 +25,7 @@ actions = [
     AllPublic(),
     Log(),
     Tree(),
+    Readme(),
     Exit(),
 ]
 

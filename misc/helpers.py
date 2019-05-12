@@ -23,7 +23,7 @@ def run_command(cmd):
 
 
 def run_shell_command(cmd):
-    subprocess.call(cmd, shell=True)
+    return subprocess.call(cmd, shell=True)
 
 
 def run_command_detached(cmd):
@@ -162,13 +162,15 @@ def file_copy(src, dest):
 def exec_in_folder(folder_path, func, *func_args):
     dir_backup = os.getcwd()
     os.chdir(folder_path)
+    res = 1
     try:
-        func(*func_args)
+        res = func(*func_args)
     except Exception as e:
         os.chdir(dir_backup)
         raise e
 
     os.chdir(dir_backup)
+    return res
 
 
 def git_update():
