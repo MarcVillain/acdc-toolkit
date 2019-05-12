@@ -1,3 +1,5 @@
+import os
+
 from misc.helpers import folder_find, files_remove
 from misc.printer import print_info
 from . import action
@@ -9,7 +11,8 @@ class ClearFiles(action.Action):
             or key == 'n' or key == 'N' \
             or key == 'p' or key == 'P'
 
-    def run(self, login, login_path, solution, solution_path):
-        print_info("Clearing files of solution " + solution)
-        files = folder_find(solution_path, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs", solution + "Tests"])
+    def run(self, login, login_path, project, project_path):
+        print_info("Clearing files of project " + project)
+        files = folder_find(project_path, includes=[".*\\.cs"],
+                            excludes=["AssemblyInfo.cs"])
         files_remove(files)

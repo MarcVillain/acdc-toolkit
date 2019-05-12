@@ -77,22 +77,22 @@ def create_actions_info_message():
 
 
 def run_actions(key, login_index, logins, logins_paths,
-                solution_index, solutions, solutions_paths):
+                project_index, projects, projects_paths):
     for action in actions:
         if action.should_run(key):
             res = action.run(logins[login_index], logins_paths[login_index],
-                             solutions[solution_index], solutions_paths[solution_index])
+                             projects[project_index], projects_paths[project_index])
             if res is not None:
-                solution_index += res
-                while solution_index >= len(solutions):
-                    solution_index -= len(solutions)
+                project_index += res
+                while project_index >= len(projects):
+                    project_index -= len(projects)
                     login_index += 1
-                while solution_index < 0:
-                    solution_index += len(solutions)
+                while project_index < 0:
+                    project_index += len(projects)
                     login_index -= 1
                 login_index %= len(logins)
 
-    return login_index, solution_index
+    return login_index, project_index
 
 
 def run_moulinette(no_rider, logins, tp_slug):
@@ -102,9 +102,16 @@ def run_moulinette(no_rider, logins, tp_slug):
                        for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"])
                        if os.path.isdir(path)]
     solutions = [os.path.basename(path) for path in solutions_paths]
+
+    projects_paths = [path
+                      for path in folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"], depth=2)
+                      if os.path.isdir(path)]
+    projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
+                for path in projects_paths]
+
     run_platform = platform(interrupts={})
 
-    login_index, solution_index = run_actions(None, 0, logins, logins_paths, 0, solutions, solutions_paths)
+    login_index, project_index = run_actions(None, 0, logins, logins_paths, 0, projects, projects_paths)
 
     actions_info_message = create_actions_info_message()
 
@@ -124,15 +131,15 @@ def run_moulinette(no_rider, logins, tp_slug):
             print_press_enter("when the window is opened")
 
     while True:
-        print_success("Student " + logins[login_index] + " (" + solutions[solution_index] + ") loaded")
+        print_success("Student " + logins[login_index] + " (" + projects[project_index] + ") loaded")
         print_warning(actions_info_message)
 
         key = run_platform.getkey()
         if key == keys.CTRL_D:
             break
 
-        login_index, solution_index = run_actions(key, login_index, logins, logins_paths,
-                                                  solution_index, solutions, solutions_paths)
+        login_index, project_index = run_actions(key, login_index, logins, logins_paths,
+                                                 project_index, projects, projects_paths)
 
 
 def cmd_correct(tp_slug, no_rider, logins):

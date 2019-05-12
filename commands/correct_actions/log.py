@@ -6,7 +6,7 @@ class Log(action.Action):
     def should_run(self, key):
         return key == 'l' or key == 'L'
 
-    def run(self, login, login_path, solution, solution_path):
+    def run(self, login, login_path, project, project_path):
         exec_in_folder(login_path,
                        run_shell_command, "git log --color=always | less -R")
 

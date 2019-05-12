@@ -9,7 +9,7 @@ class AllPublic(action.Action):
             or key == 'n' or key == 'N' \
             or key == 'p' or key == 'P'
 
-    def run(self, login, login_path, solution, solution_path):
+    def run(self, login, login_path, project, project_path):
         print_info("Replacing all private/protected/... with public")
 
         replace_table = {
@@ -20,6 +20,6 @@ class AllPublic(action.Action):
             "Main": "StudentMain",
         }
 
-        for file in folder_find(solution_path, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"]):
+        for file in folder_find(project_path, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"]):
             for text_to_search, replacement_text in replace_table.items():
                 file_replace(file, text_to_search, replacement_text)

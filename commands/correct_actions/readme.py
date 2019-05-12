@@ -9,7 +9,7 @@ class Readme(action.Action):
     def should_run(self, key):
         return key == 'r' or key == 'R'
 
-    def run(self, login, login_path, solution, solution_path):
+    def run(self, login, login_path, project, project_path):
         if exec_in_folder(login_path,
                           run_shell_command, "find . -type f -iname '*README*' | egrep '.*'") is not 0:
             print_error('README not found')

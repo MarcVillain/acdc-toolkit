@@ -9,7 +9,7 @@ class Shell(action.Action):
     def should_run(self, key):
         return key == 's' or key == 'S'
 
-    def run(self, login, login_path, solution, solution_path):
+    def run(self, login, login_path, project, project_path):
         print()
         print_warning('Press Ctrl+D to get back.')
         print()

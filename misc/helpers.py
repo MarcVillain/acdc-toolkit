@@ -126,7 +126,13 @@ def folder_ls(folder_path, includes=None, excludes=None):
             if file_matches(file, includes) and not file_matches(file, excludes)]
 
 
-def _folder_find(folder_path, folders, includes, excludes):
+def _folder_find(folder_path, folders, includes, excludes, list_dir, depth):
+    if depth == 0:
+        folders.append(folder_path)
+        return
+    if depth > 0:
+        depth -= 1
+
     if not os.path.exists(folder_path):
         return
 
@@ -135,18 +141,18 @@ def _folder_find(folder_path, folders, includes, excludes):
         if file_matches(file, excludes):
             pass
         elif os.path.isdir(path):
-            _folder_find(path, folders, includes, excludes)
+            _folder_find(path, folders, includes, excludes, list_dir, depth)
         elif file_matches(file, includes):
             folders.append(path)
 
 
-def folder_find(folder_path, includes=None, excludes=None):
+def folder_find(folder_path, includes=None, excludes=None, list_dir=False, depth=-1):
     if includes is None:
         includes = ['.*']
     if excludes is None:
         excludes = []
     folders = []
-    _folder_find(folder_path, folders, includes, excludes)
+    _folder_find(folder_path, folders, includes, excludes, list_dir, depth)
     return folders
 
 
