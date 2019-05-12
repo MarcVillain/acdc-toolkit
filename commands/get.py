@@ -51,12 +51,3 @@ def cmd_get(tp_slug, logins):
 
         except GitException as e:
             print_error("Checkout: Repository is empty", 1)
-
-        # Replace all private/protected/... with public
-        print_info("Replacing all private/protected/... with public", 1)
-        for file in folder_find(repo_folder, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"]):
-            file_replace(file, "private", "public")
-            file_replace(file, "protected", "public")
-            file_replace(file, "internal", "public")
-            file_replace(file, "public set", "public")
-            file_replace(file, "Main", "StudentMain")
