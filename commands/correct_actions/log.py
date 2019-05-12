@@ -8,7 +8,7 @@ class Log(action.Action):
 
     def run(self, login, login_path, solution, solution_path):
         exec_in_folder(login_path,
-                       run_shell_command, "git log --color=always | less -r")
+                       run_shell_command, "git log --color=always | less -R")
 
     def __str__(self):
         return "L: GIT LOG"

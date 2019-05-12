@@ -8,6 +8,7 @@ from commands.correct_actions.next import Next
 from commands.correct_actions.previous import Previous
 from commands.correct_actions.copy_files import CopyFiles
 from commands.correct_actions.shell import Shell
+from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from misc.config import *
 from misc.helpers import *
@@ -22,6 +23,7 @@ actions = [
     CopyFiles(),
     AllPublic(),
     Log(),
+    Tree(),
     Exit(),
 ]
 
