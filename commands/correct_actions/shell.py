@@ -1,6 +1,6 @@
 import os
 
-from misc.helpers import open_subshell, exec_in_folder
+from misc.helpers import exec_in_folder, run_shell_command
 from misc.printer import print_warning
 from . import action
 
@@ -15,7 +15,7 @@ class Shell(action.Action):
         print()
 
         exec_in_folder(os.path.join(login_path),
-                       open_subshell)
+                       run_shell_command, "bash")
 
     def __str__(self):
         return "S: SHELL"

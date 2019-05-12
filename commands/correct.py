@@ -3,6 +3,7 @@ from xml.etree import cElementTree
 from commands.correct_actions.all_public import AllPublic
 from commands.correct_actions.clear_files import ClearFiles
 from commands.correct_actions.exit import Exit
+from commands.correct_actions.log import Log
 from commands.correct_actions.next import Next
 from commands.correct_actions.previous import Previous
 from commands.correct_actions.copy_files import CopyFiles
@@ -20,6 +21,7 @@ actions = [
     ClearFiles(),
     CopyFiles(),
     AllPublic(),
+    Log(),
     Exit(),
 ]
 

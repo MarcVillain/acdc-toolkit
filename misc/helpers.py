@@ -22,6 +22,10 @@ def run_command(cmd):
     return res
 
 
+def run_shell_command(cmd):
+    subprocess.call(cmd, shell=True)
+
+
 def run_command_detached(cmd):
     devnull = open(os.devnull)
     subprocess.Popen(cmd.split(" "), stdout=devnull, stderr=devnull)
@@ -55,10 +59,6 @@ def run_commands(cmds, cmds_fail=None, cmds_finally=None):
         run_command(cmd_finally)
 
     return ret_val
-
-
-def open_subshell():
-    subprocess.call("bash")
 
 
 def get_logins(file, logins=None):
