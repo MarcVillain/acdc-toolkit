@@ -1,6 +1,7 @@
 from xml.etree import cElementTree
 
 from commands.correct_actions.all_public import AllPublic
+from commands.correct_actions.build import Build
 from commands.correct_actions.clear_files import ClearFiles
 from commands.correct_actions.exit import Exit
 from commands.correct_actions.log import Log
@@ -19,6 +20,7 @@ from getkey import platform, keys
 actions = [
     Previous(),
     Next(),
+    Build(),
     Shell(),
     ClearFiles(),
     CopyFiles(),
