@@ -11,7 +11,7 @@ class Tree(action.Action):
     def run(self, login, login_path, solution, solution_path):
         exec_in_folder(login_path,
                        run_shell_command,
-                       "tree " + os.path.join("..", os.path.basename(login_path), solution) + " -aC -I '.git' | less -R")
+                       "tree " + os.path.join("..", os.path.basename(login_path)) + " -aC -I '.git' | less -R")
 
     def __str__(self):
         return "T: TREE"
