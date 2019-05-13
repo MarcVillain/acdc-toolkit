@@ -16,9 +16,10 @@ def cmd_get(tp_slug, logins):
     """
     tp_folder = os.path.join(STUDENTS_FOLDER, tp_slug)
 
-    print_error("TP " + tp_slug + " already downloaded")
-    if not print_ask("Do you want to override it?"):
-        return
+    if folder_exists(tp_folder):
+        print_error("TP " + tp_slug + " already downloaded")
+        if not print_ask("Do you want to override it?"):
+            return
 
     folder_create_if_not_exists(tp_folder)
 
@@ -52,4 +53,4 @@ def cmd_get(tp_slug, logins):
             print_success("Checkout tag " + SUBMISSION_TAG, 1)
 
         except GitException as e:
-            print_error("Checkout: Repository is empty", 1)
+            print_error("Checkout: Tag " + SUBMISSION_TAG + " not found", 1)
