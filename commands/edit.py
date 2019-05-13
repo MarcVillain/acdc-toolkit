@@ -1,8 +1,9 @@
 import os
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value
 from helpers.io import folder_ls
 from helpers.terminal import open_subshell
+from helpers.students import get_downloaded_students
 from misc.config import STUDENTS_FOLDER, REPO_FOLDER
 
 
@@ -16,7 +17,10 @@ def cmd_edit(tp_slug, login):
 
 
 def cplt_edit(text, line, begidx, endidx, options):
+    number = get_arg_number(line, begidx)
+    arguments = [[folder for folder in folder_ls(STUDENTS_FOLDER)
+                         if 'tp' in folder]]
+    if number > 1:
+        arguments.append(get_downloaded_students(get_arg_value(line, 1)))
     return autocomplete(text, line, begidx, endidx,
-                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                          if 'tp' in folder]],
-                        options)
+                        arguments, ['--e'])

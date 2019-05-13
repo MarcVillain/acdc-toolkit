@@ -14,6 +14,22 @@ def get_arg_number(line, begidx):
             argnum += 1
     return argnum
 
+def get_arg_value(line, number):
+    argnum = 0
+    start = 0
+    while start < len(line) and line[start] == ' ':
+        start += 1
+    while argnum < number:
+        while start < len(line) and line[start] != ' ':
+            start += 1
+        while start < len(line) and line[start] == ' ':
+            start += 1
+        argnum += 1
+    end = start
+    while end < len(line) and line[end] != ' ':
+        end += 1
+    return line[start:end]
+
 
 def validate(text, arg):
     if isinstance(arg, dict):
