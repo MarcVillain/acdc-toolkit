@@ -16,12 +16,6 @@ def cmd_get(tp_slug, logins):
     :param logins: List of student logins
     """
     tp_folder = os.path.join(STUDENTS_FOLDER, tp_slug)
-
-    if folder_exists(tp_folder):
-        print_error("TP " + tp_slug + " already downloaded")
-        if not print_ask("Do you want to override it?"):
-            return
-
     folder_create_if_not_exists(tp_folder)
 
     # For each student
@@ -31,6 +25,9 @@ def cmd_get(tp_slug, logins):
 
         # If folder exists, delete it
         if folder_exists(repo_folder):
+            print_error("Student project already downloaded", 1)
+            if not print_ask("Do you want to override it?", 1):
+                continue
             folder_remove(repo_folder)
 
         try:
