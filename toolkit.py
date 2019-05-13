@@ -3,8 +3,14 @@
 import cmd
 import os
 import sys
-import readline
-readline.set_completer_delims(' =')
+try:
+    import readline
+    readline.set_completer_delims(' =')
+except ImportError:
+    readline = None
+
+from commands.tag import cmd_tag
+from misc.config import HISTORY_FILE, HISTORY_SIZE
 
 from docopt import docopt, DocoptExit
 
@@ -76,6 +82,10 @@ class CommandDispatcher(cmd.Cmd):
     prompt = "ACDC Toolkit $ "
     file = None
 
+    def preloop(self):
+        if readline and os.path.exists(HISTORY_FILE):
+            readline.read_history_file(HISTORY_FILE)
+
     def cmdloop(self, intro=None):
         if intro is None:
             print(self.intro)
@@ -88,6 +98,11 @@ class CommandDispatcher(cmd.Cmd):
             except KeyboardInterrupt:
                 print("^C")
 
+    def postloop(self):
+        if readline:
+            readline.set_history_length(HISTORY_SIZE)
+            readline.write_history_file(HISTORY_FILE)
+
     """                   """
     """  Custom commands  """
     """                   """
@@ -97,7 +112,6 @@ class CommandDispatcher(cmd.Cmd):
         if len(completions) == 1:
             return [completions[0] + ' ']
         return completions
-
 
     @docopt_cmd
     def do_get(self, args):
@@ -135,7 +149,6 @@ class CommandDispatcher(cmd.Cmd):
     """                    """
     """  Default commands  """
     """                    """
-
 
     @docopt_cmd
     def do_clear(self, args):

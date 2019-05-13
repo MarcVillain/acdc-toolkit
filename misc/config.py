@@ -12,6 +12,9 @@ STUDENTS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "students")
 
 DEFAULT_LOGINS_FILE = os.path.join(ACDC_LOCAL_FOLDER, "logins.txt")
 
+HISTORY_FILE = os.path.join(TOOLKIT_FOLDER, ".history")
+HISTORY_SIZE = 1000
+
 REPO_FOLDER = "{tp_slug}-{login}"
 REPO_URL = "git@git.cri.epita.fr:p/" + str(SUP_YEAR) + "-sup-tp/" + REPO_FOLDER
 SUBMISSION_TAG = "submission"
