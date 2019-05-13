@@ -108,13 +108,13 @@ def run_moulinette(no_rider, logins, tp_slug):
     logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
                     for login in logins]
     solutions_paths = [path
-                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"])
+                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*"])
                        if os.path.isdir(path)]
     solutions = [os.path.basename(path) for path in solutions_paths]
 
     projects_paths = [path
                       for path in
-                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"], depth=2)
+                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*"], depth=2)
                       if os.path.isdir(path)]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
