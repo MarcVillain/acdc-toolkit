@@ -64,7 +64,7 @@ def __parse_tests(xml, out):
 
 def parse_tests(path):
     root = cElementTree.parse(path).getroot()
-    out={}
+    out = {}
     out['stats'] = {}
     out['stats']['passed'] = 0
     out['stats']['failed'] = 0
@@ -112,7 +112,8 @@ def run_moulinette(no_rider, logins, tp_slug):
     solutions = [os.path.basename(path) for path in solutions_paths]
 
     projects_paths = [path
-                      for path in folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"], depth=2)
+                      for path in
+                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"], depth=2)
                       if os.path.isdir(path)]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
@@ -176,7 +177,6 @@ def cmd_correct(tp_slug, no_rider, logins):
 
 def cplt_correct(text, line, begidx, endidx, options):
     return autocomplete(text, line, begidx, endidx,
-                 [[folder for folder in folder_ls(STUDENTS_FOLDER)
+                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
                           if 'tp' in folder]],
-                 options)
-
+                        options)

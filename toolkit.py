@@ -19,7 +19,7 @@ from misc.config import HISTORY_FILE, HISTORY_SIZE
 from docopt import docopt, DocoptExit
 
 from commands.get import cmd_get
-from commands.list import cmd_list
+from commands.list import cmd_list, cplt_list
 from commands.remove import cmd_remove
 from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
@@ -116,6 +116,8 @@ class CommandDispatcher(cmd.Cmd):
             return [completions[0] + ' ']
         return completions
 
+    """ get """
+
     @docopt_cmd
     def do_get(self, args):
         """Usage: get <tp_slug> [<login>...] [--file=<logins_file>]"""
@@ -123,20 +125,31 @@ class CommandDispatcher(cmd.Cmd):
         logins = get_logins(args["--file"], args["<login>"])
         cmd_get(tp_slug, logins)
 
+    """ remove """
+
     @docopt_cmd
     def do_remove(self, args):
         """Usage: remove <tp_slug>"""
         cmd_remove(args['<tp_slug>'])
+
+    """ list """
 
     @docopt_cmd
     def do_list(self, args):
         """Usage: list [<tp_slug>]"""
         cmd_list(args["<tp_slug>"])
 
+    def complete_list(self, text, line, begidx, endidx):
+        return cplt_list(text, line, begidx, endidx, [])
+
+    """ edit """
+
     @docopt_cmd
     def do_edit(self, args):
         """Usage: edit <tp_slug> <login>"""
         cmd_edit(args["<tp_slug>"], args["<login>"])
+
+    """ tag """
 
     @docopt_cmd
     def do_tag(self, args):
@@ -146,6 +159,8 @@ class CommandDispatcher(cmd.Cmd):
                 args["--name"],
                 args["<date:yyyy-mm-dd>"],
                 logins)
+
+    """ correct """
 
     @docopt_cmd
     def do_correct(self, args):
@@ -157,6 +172,8 @@ class CommandDispatcher(cmd.Cmd):
     def complete_correct(self, text, line, begidx, endidx):
         return cplt_correct(text, line, begidx, endidx,
                             ['--no-rider', {'name': '--file=', 'file': True}])
+
+    """ update """
 
     @docopt_cmd
     def do_update(self, args):

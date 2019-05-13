@@ -1,5 +1,6 @@
 import os
 
+from helpers.autocomplete import autocomplete
 from helpers.io import folder_ls
 from misc.config import STUDENTS_FOLDER
 from misc.printer import print_info
@@ -18,3 +19,10 @@ def cmd_list(tp_slug):
                     print_info(subfolder)
         else:
             print_info(folder)
+
+
+def cplt_list(text, line, begidx, endidx, options):
+    return autocomplete(text, line, begidx, endidx,
+                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
+                          if 'tp' in folder]],
+                        options)
