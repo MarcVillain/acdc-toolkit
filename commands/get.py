@@ -1,8 +1,9 @@
 import os
 
+from helpers.autocomplete import autocomplete
 from helpers.command import exec_in_folder
 from helpers.git import git_clone, git_checkout_tag
-from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove
+from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove, folder_ls
 from misc.config import REPO_URL, REPO_FOLDER, SUBMISSION_TAG, STUDENTS_FOLDER
 from misc.exceptions import GitException
 from misc.printer import print_success, print_info, print_error, print_ask
@@ -54,3 +55,10 @@ def cmd_get(tp_slug, logins):
 
         except GitException as e:
             print_error("Checkout: Tag " + SUBMISSION_TAG + " not found", 1)
+
+
+def cplt_get(text, line, begidx, endidx, options):
+    return autocomplete(text, line, begidx, endidx,
+                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
+                          if 'tp' in folder]],
+                        options)

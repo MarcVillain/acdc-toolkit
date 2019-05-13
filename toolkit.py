@@ -9,6 +9,7 @@ from helpers.other import get_logins
 
 try:
     import readline
+
     readline.set_completer_delims(' =')
 except ImportError:
     readline = None
@@ -18,7 +19,7 @@ from misc.config import HISTORY_FILE, HISTORY_SIZE
 
 from docopt import docopt, DocoptExit
 
-from commands.get import cmd_get
+from commands.get import cmd_get, cplt_get
 from commands.list import cmd_list, cplt_list
 from commands.remove import cmd_remove, cplt_remove
 from commands.update import cmd_update
@@ -124,6 +125,10 @@ class CommandDispatcher(cmd.Cmd):
         tp_slug = args["<tp_slug>"]
         logins = get_logins(args["--file"], args["<login>"])
         cmd_get(tp_slug, logins)
+
+    def complete_get(self, text, line, begidx, endidx):
+        return cplt_get(text, line, begidx, endidx,
+                        [{'name': '--file=', 'file': True}])
 
     """ remove """
 
