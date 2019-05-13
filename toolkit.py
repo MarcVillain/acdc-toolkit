@@ -4,7 +4,7 @@ import cmd
 import os
 import sys
 
-from commands.edit import cmd_edit
+from commands.edit import cmd_edit, cplt_edit
 from helpers.other import get_logins
 
 try:
@@ -157,6 +157,9 @@ class CommandDispatcher(cmd.Cmd):
     def do_edit(self, args):
         """Usage: edit <tp_slug> <login>"""
         cmd_edit(args["<tp_slug>"], args["<login>"])
+
+    def complete_edit(self, text, line, begidx, endidx):
+        return cplt_edit(text, line, begidx, endidx, [])
 
     """ tag """
 
