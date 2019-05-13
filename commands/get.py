@@ -1,8 +1,10 @@
 import os
+
+from helpers.command import exec_in_folder
+from helpers.git import git_clone, git_checkout_tag
+from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove
 from misc.config import REPO_URL, REPO_FOLDER, SUBMISSION_TAG, STUDENTS_FOLDER
 from misc.exceptions import GitException
-from misc.helpers import exec_in_folder, git_clone, git_checkout_tag, folder_create_if_not_exists, \
-    folder_exists, folder_remove, file_replace, folder_find
 from misc.printer import print_success, print_info, print_error, print_ask
 
 

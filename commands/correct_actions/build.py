@@ -1,6 +1,6 @@
 import os
 
-from misc.helpers import exec_in_folder, run_shell_command, run_command
+from helpers.command import exec_in_folder, run_command
 from misc.printer import print_error, print_success, print_info
 from . import action
 

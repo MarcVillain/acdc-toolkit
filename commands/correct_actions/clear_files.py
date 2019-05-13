@@ -1,6 +1,6 @@
 import os
 
-from misc.helpers import folder_find, files_remove
+from helpers.io import folder_find, files_remove
 from misc.printer import print_info
 from . import action
 

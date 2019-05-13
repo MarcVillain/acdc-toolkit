@@ -3,6 +3,9 @@
 import cmd
 import os
 import sys
+
+from helpers.other import get_logins
+
 try:
     import readline
     readline.set_completer_delims(' =')
@@ -19,7 +22,6 @@ from commands.list import cmd_list
 from commands.remove import cmd_remove
 from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
-from misc.helpers import get_logins
 from misc.printer import print_error
 
 # Save the doc of each referenced function to

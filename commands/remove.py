@@ -1,6 +1,7 @@
 import os
+
+from helpers.io import folder_remove
 from misc.config import STUDENTS_FOLDER
-from misc.helpers import folder_remove
 from misc.printer import print_success
 
 

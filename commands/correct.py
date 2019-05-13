@@ -15,9 +15,12 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
+from helpers.autocomplete import autocomplete
+from helpers.command import exec_in_folder
+from helpers.git import git_clone
+from helpers.io import folder_ls, folder_find, folder_exists, folder_create
+from helpers.other import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
-from misc.helpers import git_clone, folder_ls, folder_find, open_rider, exec_in_folder, folder_exists, folder_create, \
-    autocomplete
 from misc.printer import print_info, print_success, print_press_enter, print_warning
 
 actions = [
