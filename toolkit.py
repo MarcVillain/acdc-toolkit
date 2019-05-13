@@ -131,6 +131,15 @@ class CommandDispatcher(cmd.Cmd):
         cmd_list(args["-d"])
 
     @docopt_cmd
+    def do_tag(self, args):
+        """Usage: tag <tp_slug> <date:yyyy-mm-dd> [<login>...] [--file=<logins_file>] [--name=<tag_name>]"""
+        logins = get_logins(args["--file"], args["<login>"])
+        cmd_tag(args["<tp_slug>"],
+                args["--name"],
+                args["<date:yyyy-mm-dd>"],
+                logins)
+
+    @docopt_cmd
     def do_correct(self, args):
         """Usage: correct <tp_slug> [--no-rider] [--file=<logins_file>]"""
         logins_file = args["--file"]
