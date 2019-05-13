@@ -1,7 +1,7 @@
 import os
 from misc.config import REPO_URL, REPO_FOLDER, SUBMISSION_TAG, STUDENTS_FOLDER
 from misc.exceptions import GitException
-from misc.helpers import exec_in_folder, git_clone, git_checkout, folder_create_if_not_exists, \
+from misc.helpers import exec_in_folder, git_clone, git_checkout_tag, folder_create_if_not_exists, \
     folder_exists, folder_remove, file_replace, folder_find
 from misc.printer import print_success, print_info, print_error, print_ask
 
@@ -45,7 +45,7 @@ def cmd_get(tp_slug, logins):
             # Checkout tag submission
             exec_in_folder(
                 repo_folder,
-                git_checkout, SUBMISSION_TAG
+                git_checkout_tag, SUBMISSION_TAG
             )
             print_success("Checkout tag " + SUBMISSION_TAG, 1)
 
