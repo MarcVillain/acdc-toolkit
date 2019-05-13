@@ -1,6 +1,6 @@
 import os
 
-from helpers.io import folder_find, folder_create, file_copy
+from helpers.io import folder_find, folder_create, file_copy, file_insert_text_every_n_lines
 from misc.printer import print_info
 from . import action
 
@@ -20,3 +20,4 @@ class CopyFiles(action.Action):
             dest = os.path.join(project_path, file[len(student_project_folder)+1:])
             folder_create(os.path.dirname(dest))
             file_copy(src, dest)
+            file_insert_text_every_n_lines(dest, "// " + login, 20)

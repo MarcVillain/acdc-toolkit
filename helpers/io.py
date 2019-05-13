@@ -92,3 +92,21 @@ def files_remove(files_paths):
 
 def file_copy(src, dest):
     shutil.copyfile(src, dest)
+
+
+def file_insert_text_every_n_lines(file_path, text, n):
+    f = open(file_path, "r")
+    contents = f.readlines()
+    f.close()
+
+    i = 0
+    while i < len(contents):
+        for line in text.split("\n"):
+            contents.insert(i, line + "\n")
+            i += 1
+        i += n
+
+    f = open(file_path, "w")
+    contents = "".join(contents)
+    f.write(contents)
+    f.close()
