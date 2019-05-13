@@ -130,8 +130,8 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_list(self, args):
-        """Usage: list [-d]"""
-        cmd_list(args["-d"])
+        """Usage: list [<tp_slug>]"""
+        cmd_list(args["<tp_slug>"])
 
     @docopt_cmd
     def do_edit(self, args):

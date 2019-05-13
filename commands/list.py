@@ -5,15 +5,16 @@ from misc.config import STUDENTS_FOLDER
 from misc.printer import print_info
 
 
-def cmd_list(display_detail):
+def cmd_list(tp_slug):
     """
     List all the downloaded repos
-    :param display_detail If we should list students on each folder or not
+    :param tp_slug: TP slug
     """
     for folder in folder_ls(STUDENTS_FOLDER):
-        if 'tp' in folder:
-            print_info(folder)
-            if display_detail:
+        if tp_slug:
+            if folder == tp_slug:
                 for subfolder in folder_ls(os.path.join(STUDENTS_FOLDER, folder)):
                     subfolder = subfolder.replace(folder + "-", "")
-                    print_info(subfolder, 1)
+                    print_info(subfolder)
+        else:
+            print_info(folder)
