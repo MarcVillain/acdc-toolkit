@@ -1,3 +1,4 @@
+import os
 from xml.etree import cElementTree
 
 from commands.correct_actions.all_public import AllPublic
@@ -12,10 +13,12 @@ from commands.correct_actions.readme import Readme
 from commands.correct_actions.shell import Shell
 from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
-from misc.config import *
-from misc.helpers import *
-from misc.printer import *
 from getkey import platform, keys
+
+from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
+from misc.helpers import git_clone, folder_ls, folder_find, open_rider, exec_in_folder, folder_exists, folder_create, \
+    autocomplete
+from misc.printer import print_info, print_success, print_press_enter, print_warning
 
 actions = [
     Previous(),
