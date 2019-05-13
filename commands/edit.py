@@ -23,4 +23,4 @@ def cplt_edit(text, line, begidx, endidx, options):
     if number > 1:
         arguments.append(get_downloaded_students(get_arg_value(line, 1)))
     return autocomplete(text, line, begidx, endidx,
-                        arguments, ['--e'])
+                        arguments, options)
