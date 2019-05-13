@@ -2,7 +2,7 @@
 
 .idea/
 logins.txt
-
+.history
 
 # Created by https://www.gitignore.io/api/vim,linux,macos,python,pycharm
 # Edit at https://www.gitignore.io/?templates=vim,linux,macos,python,pycharm
