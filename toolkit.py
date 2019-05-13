@@ -170,12 +170,12 @@ class CommandDispatcher(cmd.Cmd):
     @docopt_cmd
     def do_exit(self, args):
         """Usage: exit"""
-        exit()
+        return True
 
     def default(self, command):
         if command is "EOF":
-            print()
-            exit()
+            print("exit")
+            return True
         if command is "":
             return
         print(str(command).split(" ")[0] + ": command not found")
