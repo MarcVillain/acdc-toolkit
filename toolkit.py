@@ -180,9 +180,8 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_correct(self, args):
-        """Usage: correct <tp_slug> [--no-rider] [--file=<logins_file>]"""
-        logins_file = args["--file"]
-        logins = get_logins(logins_file)
+        """Usage: correct <tp_slug> [<login>...] [--file=<logins_file>] [--no-rider]"""
+        logins = get_logins(args["--file"], args["<login>"])
         cmd_correct(args["<tp_slug>"], args["--no-rider"], logins)
 
     def complete_correct(self, text, line, begidx, endidx):
