@@ -4,6 +4,7 @@ import cmd
 import os
 import sys
 
+from commands.edit import cmd_edit
 from helpers.other import get_logins
 
 try:
@@ -131,6 +132,11 @@ class CommandDispatcher(cmd.Cmd):
     def do_list(self, args):
         """Usage: list [-d]"""
         cmd_list(args["-d"])
+
+    @docopt_cmd
+    def do_edit(self, args):
+        """Usage: edit <tp_slug> <login>"""
+        cmd_edit(args["<tp_slug>"], args["<login>"])
 
     @docopt_cmd
     def do_tag(self, args):

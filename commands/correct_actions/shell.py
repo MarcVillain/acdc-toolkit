@@ -1,6 +1,7 @@
 import os
 
 from helpers.command import exec_in_folder, run_shell_command
+from helpers.terminal import open_subshell
 from misc.printer import print_warning, print_error
 from . import action
 
@@ -10,12 +11,7 @@ class Shell(action.Action):
         return key == 's' or key == 'S'
 
     def run(self, login, login_path, project, project_path):
-        print()
-        print_warning('Press Ctrl+D to get back.')
-        print()
-
-        exec_in_folder(login_path,
-                       run_shell_command, "bash")
+        open_subshell(login_path)
 
     def __str__(self):
         return "S: SHELL"

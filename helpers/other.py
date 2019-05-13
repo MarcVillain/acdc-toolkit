@@ -20,7 +20,3 @@ def get_logins(file, logins=None):
             logins.append(login)
 
     return logins
-
-
-def open_rider(folder):
-    run_command_detached("rider " + folder)

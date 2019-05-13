@@ -19,7 +19,7 @@ from helpers.autocomplete import autocomplete
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
-from helpers.other import open_rider
+from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
 from misc.printer import print_info, print_success, print_press_enter, print_warning
 
