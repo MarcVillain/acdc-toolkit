@@ -14,7 +14,7 @@ try:
 except ImportError:
     readline = None
 
-from commands.tag import cmd_tag
+from commands.tag import cmd_tag, cplt_tag
 from misc.config import HISTORY_FILE, HISTORY_SIZE
 
 from docopt import docopt, DocoptExit
@@ -171,6 +171,10 @@ class CommandDispatcher(cmd.Cmd):
                 args["--name"],
                 args["<date:yyyy-mm-dd>"],
                 logins)
+
+    def complete_tag(self, text, line, begidx, endidx):
+        return cplt_tag(text, line, begidx, endidx,
+                        ['--name=', {'name': '--file=', 'file': True}])
 
     """ correct """
 
