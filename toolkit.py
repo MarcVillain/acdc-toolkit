@@ -20,7 +20,7 @@ from docopt import docopt, DocoptExit
 
 from commands.get import cmd_get
 from commands.list import cmd_list, cplt_list
-from commands.remove import cmd_remove
+from commands.remove import cmd_remove, cplt_remove
 from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
 from misc.printer import print_error
@@ -131,6 +131,9 @@ class CommandDispatcher(cmd.Cmd):
     def do_remove(self, args):
         """Usage: remove <tp_slug>"""
         cmd_remove(args['<tp_slug>'])
+
+    def complete_remove(self, text, line, begidx, endidx):
+        return cplt_remove(text, line, begidx, endidx, [])
 
     """ list """
 
