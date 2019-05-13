@@ -15,10 +15,11 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
+from helpers.students import get_downloaded_students
 from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
 from misc.printer import print_info, print_success, print_press_enter, print_warning
@@ -107,13 +108,13 @@ def run_moulinette(no_rider, logins, tp_slug):
     logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
                     for login in logins]
     solutions_paths = [path
-                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"])
+                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*"])
                        if os.path.isdir(path)]
     solutions = [os.path.basename(path) for path in solutions_paths]
 
     projects_paths = [path
                       for path in
-                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\.git", ".*Tests.*"], depth=2)
+                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*"], depth=2)
                       if os.path.isdir(path)]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
@@ -176,6 +177,9 @@ def cmd_correct(tp_slug, no_rider, logins):
 
 
 def cplt_correct(text, line, begidx, endidx, options):
+    number = get_arg_number(line, begidx)
+    if number > 1:
+        options += get_downloaded_students(get_arg_value(line, 1))
     return autocomplete(text, line, begidx, endidx,
                         [[folder for folder in folder_ls(STUDENTS_FOLDER)
                           if 'tp' in folder]],

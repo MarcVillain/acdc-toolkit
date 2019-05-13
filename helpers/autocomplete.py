@@ -14,6 +14,7 @@ def get_arg_number(line, begidx):
             argnum += 1
     return argnum
 
+
 def get_arg_value(line, number):
     argnum = 0
     start = 0
@@ -29,6 +30,27 @@ def get_arg_value(line, number):
     while end < len(line) and line[end] != ' ':
         end += 1
     return line[start:end]
+
+
+def get_args(line, filter=None):
+    if filter is None:
+        filter = lambda i, arg: True
+    args = []
+    start = 0
+    number = 0
+    while start < len(line) and line[start] == ' ':
+        start += 1
+    while start < len(line):
+        arg_start = start
+        while start < len(line) and line[start] != ' ':
+            start += 1
+        arg = line[arg_start:start]
+        if filter(number, arg):
+            args.append(arg)
+        while start < len(line) and line[start] == ' ':
+            start += 1
+        number += 1
+    return args
 
 
 def validate(text, arg):
@@ -129,6 +151,13 @@ def filter_autocomplete(text, arguments):
     return []
 
 
+def remove_duplicates(options, line, current, nb_args):
+    used = get_args(line, lambda i, arg: i > nb_args and i != current)
+    return [option
+            for option in options
+            if option not in used]
+
+
 def autocomplete(text, line, begidx, endidx, arguments, options):
     number = get_arg_number(line, begidx)
     if begidx > 0 and line[begidx - 1] == '=':
@@ -138,4 +167,4 @@ def autocomplete(text, line, begidx, endidx, arguments, options):
     if number <= len(arguments):
         return filter_autocomplete(text, arguments[number - 1])
     else:
-        return filter_autocomplete(text, options)
+        return filter_autocomplete(text, remove_duplicates(options, line, number, len(arguments)))
