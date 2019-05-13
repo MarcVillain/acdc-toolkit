@@ -12,7 +12,7 @@ STUDENTS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "students")
 
 DEFAULT_LOGINS_FILE = os.path.join(ACDC_LOCAL_FOLDER, "logins.txt")
 
-HISTORY_FILE = os.path.join(TOOLKIT_FOLDER, ".history")
+HISTORY_FILE = os.path.join(ACDC_LOCAL_FOLDER, ".toolkit_history")
 HISTORY_SIZE = 1000
 
 REPO_FOLDER = "{tp_slug}-{login}"
