@@ -34,4 +34,4 @@ Commit format: `tag(name):  message`
 ## Authors
 
 - Marc Villain (marc.villain@epita.fr)
-- Alex van-Vliet (alex.van-vliet@epita.fr)
+- Alex van Vliet (alex.van-vliet@epita.fr)

@@ -3,17 +3,27 @@
 import cmd
 import os
 import sys
-import readline
-readline.set_completer_delims(' =')
+
+from commands.edit import cmd_edit, cplt_edit
+from helpers.other import get_logins
+
+try:
+    import readline
+
+    readline.set_completer_delims(' =')
+except ImportError:
+    readline = None
+
+from commands.tag import cmd_tag, cplt_tag
+from misc.config import HISTORY_FILE, HISTORY_SIZE
 
 from docopt import docopt, DocoptExit
 
-from commands.get import cmd_get
-from commands.list import cmd_list
-from commands.remove import cmd_remove
+from commands.get import cmd_get, cplt_get
+from commands.list import cmd_list, cplt_list
+from commands.remove import cmd_remove, cplt_remove
 from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
-from misc.helpers import get_logins
 from misc.printer import print_error
 
 # Save the doc of each referenced function to
@@ -76,6 +86,10 @@ class CommandDispatcher(cmd.Cmd):
     prompt = "ACDC Toolkit $ "
     file = None
 
+    def preloop(self):
+        if readline and os.path.exists(HISTORY_FILE):
+            readline.read_history_file(HISTORY_FILE)
+
     def cmdloop(self, intro=None):
         if intro is None:
             print(self.intro)
@@ -88,6 +102,11 @@ class CommandDispatcher(cmd.Cmd):
             except KeyboardInterrupt:
                 print("^C")
 
+    def postloop(self):
+        if readline:
+            readline.set_history_length(HISTORY_SIZE)
+            readline.write_history_file(HISTORY_FILE)
+
     """                   """
     """  Custom commands  """
     """                   """
@@ -98,6 +117,7 @@ class CommandDispatcher(cmd.Cmd):
             return [completions[0] + ' ']
         return completions
 
+    """ get """
 
     @docopt_cmd
     def do_get(self, args):
@@ -106,26 +126,69 @@ class CommandDispatcher(cmd.Cmd):
         logins = get_logins(args["--file"], args["<login>"])
         cmd_get(tp_slug, logins)
 
+    def complete_get(self, text, line, begidx, endidx):
+        return cplt_get(text, line, begidx, endidx,
+                        [{'name': '--file=', 'file': True}])
+
+    """ remove """
+
     @docopt_cmd
     def do_remove(self, args):
-        """Usage: remove <tp_slug>"""
-        cmd_remove(args['<tp_slug>'])
+        """Usage: remove <tp_slug> [<login>...] [--file=<logins_file>]"""
+        logins = get_logins(args["--file"], args["<login>"])
+        cmd_remove(args['<tp_slug>'], logins)
+
+    def complete_remove(self, text, line, begidx, endidx):
+        return cplt_remove(text, line, begidx, endidx, [])
+
+    """ list """
 
     @docopt_cmd
     def do_list(self, args):
-        """Usage: list [-d]"""
-        cmd_list(args["-d"])
+        """Usage: list [<tp_slug>]"""
+        cmd_list(args["<tp_slug>"])
+
+    def complete_list(self, text, line, begidx, endidx):
+        return cplt_list(text, line, begidx, endidx, [])
+
+    """ edit """
+
+    @docopt_cmd
+    def do_edit(self, args):
+        """Usage: edit <tp_slug> <login>"""
+        cmd_edit(args["<tp_slug>"], args["<login>"])
+
+    def complete_edit(self, text, line, begidx, endidx):
+        return cplt_edit(text, line, begidx, endidx, [])
+
+    """ tag """
+
+    @docopt_cmd
+    def do_tag(self, args):
+        """Usage: tag <tp_slug> <date:yyyy-mm-dd> [<login>...] [--file=<logins_file>] [--name=<tag_name>]"""
+        logins = get_logins(args["--file"], args["<login>"])
+        cmd_tag(args["<tp_slug>"],
+                args["--name"],
+                args["<date:yyyy-mm-dd>"],
+                logins)
+
+    def complete_tag(self, text, line, begidx, endidx):
+        return cplt_tag(text, line, begidx, endidx,
+                        ['--name=', {'name': '--file=', 'file': True}])
+
+    """ correct """
 
     @docopt_cmd
     def do_correct(self, args):
-        """Usage: correct <tp_slug> [--no-rider] [--file=<logins_file>]"""
-        logins_file = args["--file"]
-        logins = get_logins(logins_file)
+        """Usage: correct <tp_slug> [<login>...] [--file=<logins_file>] [--no-rider]"""
+        logins = get_logins(args["--file"], args["<login>"])
         cmd_correct(args["<tp_slug>"], args["--no-rider"], logins)
 
     def complete_correct(self, text, line, begidx, endidx):
         return cplt_correct(text, line, begidx, endidx,
                             ['--no-rider', {'name': '--file=', 'file': True}])
+
+    """ update """
 
     @docopt_cmd
     def do_update(self, args):
@@ -135,7 +198,6 @@ class CommandDispatcher(cmd.Cmd):
     """                    """
     """  Default commands  """
     """                    """
-
 
     @docopt_cmd
     def do_clear(self, args):
@@ -157,12 +219,12 @@ class CommandDispatcher(cmd.Cmd):
     @docopt_cmd
     def do_exit(self, args):
         """Usage: exit"""
-        exit()
+        return True
 
     def default(self, command):
         if command is "EOF":
-            print()
-            exit()
+            print("exit")
+            return True
         if command is "":
             return
         print(str(command).split(" ")[0] + ": command not found")

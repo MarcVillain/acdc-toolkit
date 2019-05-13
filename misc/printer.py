@@ -1,3 +1,6 @@
+import readline
+
+
 def print_colored_icon(color, icon, msg, indent=0, end='\n'):
     icon_spaced = ""
     if icon is not None:
@@ -36,12 +39,14 @@ def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):
 def print_ask(msg, indent=0):
     print_colored_icon("\033[36m", None, msg + " [y/n]", indent=indent, end=" ")
     line = input().lower()
+    readline.remove_history_item(readline.get_current_history_length() - 1)
 
     while line != "y" and line != "n":
         if line == "":
             print()
         print_error("Please insert 'y' or 'n':", indent=indent, end=" ")
         line = input().lower()
+        readline.remove_history_item(readline.get_current_history_length() - 1)
 
     return line == "y"
 
@@ -49,3 +54,4 @@ def print_ask(msg, indent=0):
 def print_press_enter(msg, indent=0):
     print_colored_icon("\033[36m", None, "Press [Enter] " + msg + "...", indent=indent, end="")
     input()
+    readline.remove_history_item(readline.get_current_history_length() - 1)

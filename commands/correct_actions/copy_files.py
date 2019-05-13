@@ -1,6 +1,6 @@
 import os
 
-from misc.helpers import folder_find, folder_create, file_copy
+from helpers.io import folder_find, folder_create, file_copy, file_insert_text_every_n_lines
 from misc.printer import print_info
 from . import action
 
@@ -11,12 +11,13 @@ class CopyFiles(action.Action):
             or key == 'n' or key == 'N' \
             or key == 'p' or key == 'P'
 
-    def run(self, login, login_path, solution, solution_path):
-        print_info("Copying files of " + login + " (" + solution + ")")
-        files = folder_find(os.path.join(login_path, solution), includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"])
+    def run(self, login, login_path, project, project_path):
+        print_info("Copying files of " + login + " (" + project + ")")
+        student_project_folder = os.path.join(login_path, project)
+        files = folder_find(student_project_folder, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"])
         for file in files:
             src = file
-            file = file[len(os.path.join(login_path, solution))+1:]
-            dest = os.path.join(solution_path, file)
+            dest = os.path.join(project_path, file[len(student_project_folder)+1:])
             folder_create(os.path.dirname(dest))
             file_copy(src, dest)
+            file_insert_text_every_n_lines(dest, "// " + login, 20)

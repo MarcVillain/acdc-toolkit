@@ -1,5 +1,6 @@
+from helpers.command import exec_in_folder
+from helpers.git import git_update
 from misc.config import TOOLKIT_FOLDER
-from misc.helpers import exec_in_folder, git_update
 from misc.printer import print_success
 
 
