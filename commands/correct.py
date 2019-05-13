@@ -15,10 +15,11 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, get_args
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
+from helpers.students import get_unused_downloaded_students
 from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
 from misc.printer import print_info, print_success, print_press_enter, print_warning
@@ -176,6 +177,12 @@ def cmd_correct(tp_slug, no_rider, logins):
 
 
 def cplt_correct(text, line, begidx, endidx, options):
+    number = get_arg_number(line, begidx)
+    if number > 1:
+        used = [arg
+                for i, arg in enumerate(get_args(line))
+                if i != 0 and i != 1 and i != number]
+        options += get_unused_downloaded_students(get_arg_value(line, 1), used)
     return autocomplete(text, line, begidx, endidx,
                         [[folder for folder in folder_ls(STUDENTS_FOLDER)
                           if 'tp' in folder]],
