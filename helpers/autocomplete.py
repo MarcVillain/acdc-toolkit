@@ -85,19 +85,25 @@ def autocomplete_path(text, name):
             if f.startswith(file)]
 
 
-def add_trailing(matches, isFile=False):
+def add_trailing(matches, isLast, isFile=False):
     matches = sanitize(matches)
     if len(matches) != 1:
         return matches
     elif not isFile:
-        return [matches[0] + ' ']
+        if isLast:
+            return [matches[0] + ' ']
+        else:
+            return matches
     elif os.path.isdir(os.path.expanduser(matches[0])):
         return [matches[0] + os.path.sep]
     else:
-        return [matches[0] + ' ']
+        if isLast:
+            return [matches[0] + ' ']
+        else:
+            return matches
 
 
-def filter_autocomplete(text, arguments):
+def filter_autocomplete(text, arguments, isLast):
     # Find all matches matching starting with text
     matches = find_matches(text, arguments)
     if len(matches) > 1:
@@ -112,12 +118,12 @@ def filter_autocomplete(text, arguments):
             if match[-1] == '=':
                 return sanitize(matches)
             else:
-                return add_trailing(matches)
+                return add_trailing(matches, isLast)
         if match['name'] != text:
             return sanitize(matches)
         name = match['name']
         if name[-1] != '=':
-            return add_trailing(matches)
+            return add_trailing(matches, isLast)
     else:
         # If there is no match,
         # split text with equals sign,
@@ -133,7 +139,7 @@ def filter_autocomplete(text, arguments):
             return []
     # If we should match a file after the equals sign
     if 'file' in match and match['file']:
-        return add_trailing(autocomplete_path(text, name), True)
+        return add_trailing(autocomplete_path(text, name), isLast, isFile=True)
     return []
 
 
@@ -154,6 +160,6 @@ def autocomplete(text, line, begidx, endidx, arguments, options):
             begidx -= 1
         text = line[begidx:endidx]
     if number <= len(arguments):
-        return filter_autocomplete(text, arguments[number - 1])
+        return filter_autocomplete(text, arguments[number - 1], len(line) == endidx)
     else:
-        return filter_autocomplete(text, remove_duplicates(options, args, number, len(arguments)))
+        return filter_autocomplete(text, remove_duplicates(options, args, number, len(arguments)), len(line) == endidx)
