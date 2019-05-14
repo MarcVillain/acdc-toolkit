@@ -15,7 +15,7 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
-from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value
+from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, parse_args
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
@@ -177,9 +177,10 @@ def cmd_correct(tp_slug, no_rider, logins):
 
 
 def cplt_correct(text, line, begidx, endidx, options):
-    number = get_arg_number(line, begidx)
+    args = parse_args(line)
+    number = get_arg_number(args, begidx)
     if number > 1:
-        options += get_downloaded_students(get_arg_value(line, 1))
+        options += get_downloaded_students(args[1][0])
     return autocomplete(text, line, begidx, endidx,
                         [[folder for folder in folder_ls(STUDENTS_FOLDER)
                           if 'tp' in folder]],

@@ -4,53 +4,39 @@ import pwd
 from helpers.io import folder_ls
 
 
-def get_arg_number(line, begidx):
-    argnum = 0
-    start = 0
-    while start < len(line) and line[start] == ' ':
-        start += 1
-    for i in range(start + 1, min(len(line), begidx)):
-        if line[i] == ' ' and line[i - 1] != ' ':
-            argnum += 1
-    return argnum
+def _progress_in_line(line, i, filter):
+    while i < len(line) and filter(line[i]):
+        i += 1
+    return i
 
 
-def get_arg_value(line, number):
-    argnum = 0
-    start = 0
-    while start < len(line) and line[start] == ' ':
-        start += 1
-    while argnum < number:
-        while start < len(line) and line[start] != ' ':
-            start += 1
-        while start < len(line) and line[start] == ' ':
-            start += 1
-        argnum += 1
-    end = start
-    while end < len(line) and line[end] != ' ':
-        end += 1
-    return line[start:end]
-
-
-def get_args(line, filter=None):
-    if filter is None:
-        filter = lambda i, arg: True
+def parse_args(line):
     args = []
-    start = 0
-    number = 0
-    while start < len(line) and line[start] == ' ':
-        start += 1
+    end = 0
+    start = _progress_in_line(line, 0, lambda c: c == ' ')
     while start < len(line):
-        arg_start = start
-        while start < len(line) and line[start] != ' ':
-            start += 1
-        arg = line[arg_start:start]
-        if filter(number, arg):
-            args.append(arg)
-        while start < len(line) and line[start] == ' ':
-            start += 1
-        number += 1
+        end = _progress_in_line(line, start, lambda c: c != ' ')
+        args.append((line[start:end], start, end))
+        start = _progress_in_line(line, end, lambda c: c == ' ')
     return args
+
+
+def get_arg_number(args, begidx):
+    i = 0
+    for arg, start, end in args:
+        if begidx <= end:
+            return i
+        i += 1
+    return i
+
+
+def get_arg_value(args, begidx):
+    for arg, start, end in args:
+        if begidx <= end:
+            if start > begidx:
+                return ''
+            return arg
+    return ''
 
 
 def validate(text, arg):
@@ -151,15 +137,18 @@ def filter_autocomplete(text, arguments):
     return []
 
 
-def remove_duplicates(options, line, current, nb_args):
-    used = get_args(line, lambda i, arg: i > nb_args and i != current)
+def remove_duplicates(options, args, current, nb_args):
+    used = [arg
+            for i, (arg, start, end) in enumerate(args)
+            if i > nb_args and i != current]
     return [option
             for option in options
             if option not in used]
 
 
 def autocomplete(text, line, begidx, endidx, arguments, options):
-    number = get_arg_number(line, begidx)
+    args = parse_args(line)
+    number = get_arg_number(args, begidx)
     if begidx > 0 and line[begidx - 1] == '=':
         while begidx > 0 and line[begidx - 1] != ' ':
             begidx -= 1
@@ -167,4 +156,4 @@ def autocomplete(text, line, begidx, endidx, arguments, options):
     if number <= len(arguments):
         return filter_autocomplete(text, arguments[number - 1])
     else:
-        return filter_autocomplete(text, remove_duplicates(options, line, number, len(arguments)))
+        return filter_autocomplete(text, remove_duplicates(options, args, number, len(arguments)))
