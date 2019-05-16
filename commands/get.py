@@ -17,6 +17,7 @@ def cmd_get(tp_slug, logins):
     """
     tp_folder = os.path.join(STUDENTS_FOLDER, tp_slug)
     folder_create_if_not_exists(tp_folder)
+    overwrite = None
 
     # For each student
     for i, login in enumerate(logins):
@@ -25,9 +26,25 @@ def cmd_get(tp_slug, logins):
 
         # If folder exists, delete it
         if folder_exists(repo_folder):
+            print(overwrite)
             print_error("Student project already downloaded", 1)
-            if not print_ask("Do you want to override it?", 1):
+            if overwrite is None:
+                ask = print_ask("Do you want to overwrite it?", ['y', 'n', 'ya', 'na'], 1)
+                if ask == 'n':
+                    print_info("Skipping student project", 1)
+                    continue
+                if ask == 'na':
+                    overwrite = False
+                    print_info("Skipping student project", 1)
+                    continue
+                elif ask == 'ya':
+                    overwrite = True
+            elif not overwrite:
+                print_info("Skipping student project", 1)
                 continue
+
+            if overwrite:
+                print_info("Overwriting student project", 1)
             folder_remove(repo_folder)
 
         try:
