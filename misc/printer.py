@@ -36,19 +36,29 @@ def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):
     print_colored_icon("\033[37m", icon, msg, indent=indent, end=end)
 
 
-def print_ask(msg, indent=0):
-    print_colored_icon("\033[36m", None, msg + " [y/n]", indent=indent, end=" ")
+def print_ask(msg, options, indent=0):
+    print_colored_icon("\033[36m", None, msg + " [" + "/".join(options) + "]", indent=indent, end=" ")
     line = input().lower()
     readline.remove_history_item(readline.get_current_history_length() - 1)
 
-    while line != "y" and line != "n":
+    error = ''
+    if len(options) == 1:
+        error = "'" + options[0] + "'"
+    elif len(options) > 1:
+        error = ', '.join("'" + option + "'" for option in options[:-1]) + " or '" + options[-1] + "'"
+
+    while line not in options:
         if line == "":
             print()
-        print_error("Please insert 'y' or 'n':", indent=indent, end=" ")
+        print_error("Please insert " + error + ":", indent=indent, end=" ")
         line = input().lower()
         readline.remove_history_item(readline.get_current_history_length() - 1)
 
-    return line == "y"
+    return line
+
+
+def print_ask_yes_no(msg, indent=0):
+    return print_ask(msg, ['y', 'n'], indent=indent) == 'y'
 
 
 def print_press_enter(msg, indent=0):
