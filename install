@@ -52,6 +52,10 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo 'To use the toolkit, run the command:'
     echo '  42sh$ acdc'
     echo ''
-else
-    echo "Toolkit successfully installed in $acdc_local_folder"
 fi
+
+echo "You can add/remove logins by editting the file at:"
+echo "  $acdc_local_folder/logins.txt"
+echo ''
+
+echo "Toolkit successfully installed in $acdc_local_folder"
