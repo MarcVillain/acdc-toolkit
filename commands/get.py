@@ -26,7 +26,6 @@ def cmd_get(tp_slug, logins):
 
         # If folder exists, delete it
         if folder_exists(repo_folder):
-            print(overwrite)
             print_error("Student project already downloaded", 1)
             if overwrite is None:
                 ask = print_ask("Do you want to overwrite it?", ['y', 'n', 'ya', 'na'], 1)
