@@ -1,5 +1,4 @@
 import os
-import yaml
 
 ACDC_YEAR = 2021
 SUP_YEAR = ACDC_YEAR + 2
