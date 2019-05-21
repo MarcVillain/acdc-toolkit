@@ -22,7 +22,7 @@ from helpers.io import folder_ls, folder_find, folder_exists, folder_create
 from helpers.students import get_downloaded_students
 from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
-from misc.printer import print_info, print_success, print_press_enter, print_warning
+from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
 
 actions = [
     Previous(),
@@ -87,8 +87,10 @@ def create_actions_info_message():
 
 def run_actions(key, login_index, logins, logins_paths,
                 project_index, projects, projects_paths):
+    student_folder_exists = folder_exists(logins_paths[login_index])
     for action in actions:
-        if action.should_run(key):
+        if action.should_run(key) \
+                and (student_folder_exists or action.can_run_if_student_folder_exists()):
             res = action.run(logins[login_index], logins_paths[login_index],
                              projects[project_index], projects_paths[project_index])
             if res is not None:
@@ -100,6 +102,7 @@ def run_actions(key, login_index, logins, logins_paths,
                     project_index += len(projects)
                     login_index -= 1
                 login_index %= len(logins)
+        student_folder_exists = folder_exists(logins_paths[login_index])
 
     return login_index, project_index
 
@@ -141,7 +144,11 @@ def run_moulinette(no_rider, logins, tp_slug):
             print_press_enter("when the window is opened")
 
     while True:
-        print_success("Student " + logins[login_index] + " (" + projects[project_index] + ") loaded")
+        msg = "Student " + logins[login_index] + " (" + projects[project_index] + ")"
+        if not folder_exists(logins_paths[login_index]):
+            print_error(msg + " not found")
+        else:
+            print_success(msg + " loaded")
         print_warning(actions_info_message)
 
         key = run_platform.getkey()
