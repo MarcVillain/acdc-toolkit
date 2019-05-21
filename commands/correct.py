@@ -161,14 +161,16 @@ def run_moulinette(no_rider, logins, tp_slug):
                                                  project_index, projects, projects_paths)
 
 
-def cmd_correct(tp_slug, no_rider, logins):
+def cmd_correct(tp_slug, no_rider, logins, get_rendus):
     """
     Start the correction tool
     :param tp_slug: Slug of the TP to correct
     :param no_rider: Should we open rider or not
     :param logins: List of student logins
+    :param get_rendus: Should we call get before correct?
     """
-    cmd_get(tp_slug, logins)
+    if get_rendus:
+        cmd_get(tp_slug, logins)
 
     if not folder_exists(MOULINETTE_FOLDER):
         folder_create(MOULINETTE_FOLDER)
