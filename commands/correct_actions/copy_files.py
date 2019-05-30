@@ -20,4 +20,5 @@ class CopyFiles(action.Action):
             dest = os.path.join(project_path, file[len(student_project_folder)+1:])
             folder_create(os.path.dirname(dest))
             file_copy(src, dest)
-            file_insert_text_every_n_lines(dest, "// " + login, 20)
+            if file.endswith(".cs"):
+                file_insert_text_every_n_lines(dest, "// " + login, 20)
