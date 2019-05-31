@@ -234,4 +234,10 @@ class CommandDispatcher(cmd.Cmd):
 if __name__ == '__main__':
     if os.path.dirname(sys.argv[0]) != '':
         os.chdir(os.path.dirname(sys.argv[0]))
-    CommandDispatcher().cmdloop()
+    dispatcher = CommandDispatcher()
+    if len(sys.argv) > 1:
+        line = ' '.join(sys.argv[1:])
+        line = dispatcher.precmd(line)
+        stop = dispatcher.onecmd(line)
+    else:
+        dispatcher.cmdloop()
