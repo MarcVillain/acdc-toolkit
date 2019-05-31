@@ -14,10 +14,11 @@ class CopyFiles(action.Action):
     def run(self, login, login_path, project, project_path):
         print_info("Copying files of " + login + " (" + project + ")")
         student_project_folder = os.path.join(login_path, project)
-        files = folder_find(student_project_folder, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"])
+        files = folder_find(student_project_folder, includes=[".*\\.cs", ".*\\.csproj"], excludes=["AssemblyInfo.cs"])
         for file in files:
             src = file
             dest = os.path.join(project_path, file[len(student_project_folder)+1:])
             folder_create(os.path.dirname(dest))
             file_copy(src, dest)
-            file_insert_text_every_n_lines(dest, "// " + login, 20)
+            if file.endswith(".cs"):
+                file_insert_text_every_n_lines(dest, "// " + login, 20)

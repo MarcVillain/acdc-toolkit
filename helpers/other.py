@@ -1,3 +1,5 @@
+import os
+
 from helpers.command import run_command_detached
 from misc.config import DEFAULT_LOGINS_FILE
 
@@ -10,7 +12,7 @@ def get_logins(file, logins=None):
         file = DEFAULT_LOGINS_FILE
 
     if file is not None:
-        for login in open(file, "r"):
+        for login in open(os.path.expanduser(file), "r"):
             if login is "":
                 continue
             logins.append(login.strip("\n\r\t "))

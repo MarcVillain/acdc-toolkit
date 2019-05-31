@@ -22,7 +22,7 @@ from helpers.io import folder_ls, folder_find, folder_exists, folder_create
 from helpers.students import get_downloaded_students
 from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
-from misc.printer import print_info, print_success, print_press_enter, print_warning
+from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
 
 actions = [
     Previous(),
@@ -87,8 +87,10 @@ def create_actions_info_message():
 
 def run_actions(key, login_index, logins, logins_paths,
                 project_index, projects, projects_paths):
+    student_folder_exists = folder_exists(logins_paths[login_index])
     for action in actions:
-        if action.should_run(key):
+        if action.should_run(key) \
+                and (student_folder_exists or not action.requires_student_folder()):
             res = action.run(logins[login_index], logins_paths[login_index],
                              projects[project_index], projects_paths[project_index])
             if res is not None:
@@ -100,6 +102,7 @@ def run_actions(key, login_index, logins, logins_paths,
                     project_index += len(projects)
                     login_index -= 1
                 login_index %= len(logins)
+        student_folder_exists = folder_exists(logins_paths[login_index])
 
     return login_index, project_index
 
@@ -108,13 +111,15 @@ def run_moulinette(no_rider, logins, tp_slug):
     logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
                     for login in logins]
     solutions_paths = [path
-                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*", ".*Correction.*"])
+                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug),
+                                             excludes=["\\..*", ".*Tests.*", ".*Correction.*"])
                        if os.path.isdir(path)]
     solutions = [os.path.basename(path) for path in solutions_paths]
 
     projects_paths = [path
                       for path in
-                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug), excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=2)
+                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug),
+                                  excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=2)
                       if os.path.isdir(path)]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
@@ -141,7 +146,11 @@ def run_moulinette(no_rider, logins, tp_slug):
             print_press_enter("when the window is opened")
 
     while True:
-        print_success("Student " + logins[login_index] + " (" + projects[project_index] + ") loaded")
+        msg = "Student " + logins[login_index] + " (" + projects[project_index] + ")"
+        if not folder_exists(logins_paths[login_index]):
+            print_error(msg + " not found")
+        else:
+            print_success(msg + " loaded")
         print_warning(actions_info_message)
 
         key = run_platform.getkey()
@@ -152,14 +161,16 @@ def run_moulinette(no_rider, logins, tp_slug):
                                                  project_index, projects, projects_paths)
 
 
-def cmd_correct(tp_slug, no_rider, logins):
+def cmd_correct(tp_slug, no_rider, logins, get_rendus):
     """
     Start the correction tool
     :param tp_slug: Slug of the TP to correct
     :param no_rider: Should we open rider or not
     :param logins: List of student logins
+    :param get_rendus: Should we call get before correct?
     """
-    cmd_get(tp_slug, logins)
+    if get_rendus:
+        cmd_get(tp_slug, logins)
 
     if not folder_exists(MOULINETTE_FOLDER):
         folder_create(MOULINETTE_FOLDER)

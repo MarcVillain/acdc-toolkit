@@ -3,9 +3,8 @@ import os
 ACDC_YEAR = 2021
 SUP_YEAR = ACDC_YEAR + 2
 
-ACDC_LOCAL_FOLDER = os.path.expanduser("~/.acdc")
-
 TOOLKIT_FOLDER = os.path.dirname(os.path.dirname(__file__))
+ACDC_LOCAL_FOLDER = os.path.dirname(TOOLKIT_FOLDER)
 
 MOULINETTE_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "moulinettes")
 STUDENTS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "students")
