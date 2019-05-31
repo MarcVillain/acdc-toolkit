@@ -120,7 +120,8 @@ def run_moulinette(no_rider, logins, tp_slug):
                       for path in
                       folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug),
                                   excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=2)
-                      if os.path.isdir(path)]
+                      if os.path.isdir(path)
+                      and (os.path.basename(path) + '.csproj') in folder_ls(path)]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
 
