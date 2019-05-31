@@ -10,6 +10,7 @@ from commands.correct_actions.next import Next
 from commands.correct_actions.previous import Previous
 from commands.correct_actions.copy_files import CopyFiles
 from commands.correct_actions.readme import Readme
+from commands.correct_actions.refresh import Refresh
 from commands.correct_actions.shell import Shell
 from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
@@ -27,6 +28,7 @@ from misc.printer import print_info, print_success, print_press_enter, print_war
 actions = [
     Previous(),
     Next(),
+    Refresh(),
     Build(),
     Shell(),
     ClearFiles(),

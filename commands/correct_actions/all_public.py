@@ -7,7 +7,8 @@ class AllPublic(action.Action):
     def should_run(self, key):
         return key is None \
             or key == 'n' or key == 'N' \
-            or key == 'p' or key == 'P'
+            or key == 'p' or key == 'P' \
+            or key == 'f' or key == 'F'
 
     def run(self, login, login_path, project, project_path):
         print_info("Replacing all private/protected/... with public")
