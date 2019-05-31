@@ -16,7 +16,7 @@ class AllPublic(action.Action):
             "private": "public",
             "protected": "public",
             "internal": "public",
-            "public set": "public",
+            "public set": "set",
         }
 
         for file in folder_find(project_path, includes=[".*\\.cs"], excludes=["AssemblyInfo.cs"]):
