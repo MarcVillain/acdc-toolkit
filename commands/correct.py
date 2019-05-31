@@ -108,22 +108,22 @@ def run_actions(key, login_index, logins, logins_paths,
 
 
 def run_moulinette(no_rider, logins, tp_slug):
-    logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
-                    for login in logins]
-    solutions_paths = [path
-                       for path in folder_ls(os.path.join(MOULINETTE_FOLDER, tp_slug),
-                                             excludes=["\\..*", ".*Tests.*", ".*Correction.*"])
-                       if os.path.isdir(path)]
-    solutions = [os.path.basename(path) for path in solutions_paths]
+    csproj_paths = [path
+                    for path in
+                    folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug),
+                                includes=[".*\\.csproj"],
+                                excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=3)
+                    if path.endswith(".csproj")]
 
-    projects_paths = [path
-                      for path in
-                      folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug),
-                                  excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=2)
-                      if os.path.isdir(path)
-                      and (os.path.basename(path) + '.csproj') in folder_ls(path)]
+    projects_paths = sorted(list({os.path.dirname(path) for path in csproj_paths}))
+    solutions_paths = list({os.path.dirname(path) for path in projects_paths})
+
+    solutions = [os.path.basename(path) for path in solutions_paths]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
+
+    logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
+                    for login in logins]
 
     run_platform = platform(interrupts={})
 
