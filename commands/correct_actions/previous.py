@@ -5,8 +5,8 @@ class Previous(action.Action):
     def should_run(self, key):
         return key == 'p' or key == 'P'
 
-    def can_run_if_student_folder_exists(self):
-        return True
+    def requires_student_folder(self):
+        return False
 
     def run(self, login, login_path, project, project_path):
         return -1

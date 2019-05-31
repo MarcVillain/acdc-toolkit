@@ -90,7 +90,7 @@ def run_actions(key, login_index, logins, logins_paths,
     student_folder_exists = folder_exists(logins_paths[login_index])
     for action in actions:
         if action.should_run(key) \
-                and (student_folder_exists or action.can_run_if_student_folder_exists()):
+                and (student_folder_exists or not action.requires_student_folder()):
             res = action.run(logins[login_index], logins_paths[login_index],
                              projects[project_index], projects_paths[project_index])
             if res is not None:
