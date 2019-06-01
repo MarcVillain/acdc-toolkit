@@ -104,6 +104,9 @@ def run_actions(key, login_index, logins, logins_paths,
                     project_index += len(projects)
                     login_index -= 1
                 login_index %= len(logins)
+                # Add space in display when looping back on logins
+                if login_index == 0 and project_index == 0:
+                    print("\n")
         student_folder_exists = folder_exists(logins_paths[login_index])
 
     return login_index, project_index
