@@ -6,7 +6,7 @@ from helpers.git import git_clone, git_checkout_tag
 from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove, folder_ls
 from misc.config import REPO_URL, REPO_FOLDER, SUBMISSION_TAG, STUDENTS_FOLDER
 from misc.exceptions import GitException
-from misc.printer import print_success, print_info, print_error, print_ask
+from misc.printer import print_success, print_info, print_error, print_ask, print_warning
 
 
 def cmd_get(tp_slug, logins):
@@ -53,6 +53,10 @@ def cmd_get(tp_slug, logins):
                 git_clone, REPO_URL.format(login=login, tp_slug=tp_slug)
             )
             print_success("Download repository", 1)
+
+            if len(folder_ls(tp_folder, excludes=[".*\\..*"])) == 0:
+                print_warning("The repository is empty", 1)
+                continue
 
         except GitException as e:
             print_error("Download: Repository not found", 1)
