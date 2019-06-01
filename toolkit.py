@@ -189,7 +189,7 @@ class CommandDispatcher(cmd.Cmd):
 
     def complete_correct(self, text, line, begidx, endidx):
         return cplt_correct(text, line, begidx, endidx,
-                            ['--no-rider', {'name': '--file=', 'file': True}])
+                            ['-g', '--get', '--no-rider', {'name': '--file=', 'file': True}])
 
     """ update """
 
