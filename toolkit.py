@@ -134,10 +134,11 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_remove(self, args):
-        """Usage: remove <tp_slug> [<login>...] [--file=<logins_file>] [-a|--all]"""
+        """Usage: remove <tp_slug> [<login>...] [--file=<logins_file>] [-a|--all] [-m|--moulinette]"""
         logins = get_logins(args["--file"], args["<login>"])
         remove_all = args["-a"] or args["--all"]
-        cmd_remove(args['<tp_slug>'], logins, remove_all)
+        remove_moulinette = args["-m"] or args["--moulinette"]
+        cmd_remove(args['<tp_slug>'], logins, remove_all, remove_moulinette)
 
     def complete_remove(self, text, line, begidx, endidx):
         return cplt_remove(text, line, begidx, endidx, ['-a', '--all'])
