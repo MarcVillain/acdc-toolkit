@@ -27,12 +27,7 @@ rm -r $here
 read -p "Do you want to create an 'acdc' alias?(y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    acdc_alias="cd $acdc_local_folder/toolkit
-    pipenv run ./toolkit.py
-    if [ \"\$?\" -eq 1 ]; then
-        pipenv install
-        pipenv run ./toolkit.py
-    fi"
+    acdc_alias="$acdc_local_folder/toolkit/run"
 
     echo '---'
     echo ''
