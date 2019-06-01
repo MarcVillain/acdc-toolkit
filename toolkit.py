@@ -4,6 +4,7 @@ import cmd
 import os
 import sys
 
+from commands.archive import cmd_archive, cplt_archive
 from commands.edit import cmd_edit, cplt_edit
 from helpers.other import get_logins
 
@@ -190,6 +191,19 @@ class CommandDispatcher(cmd.Cmd):
     def complete_correct(self, text, line, begidx, endidx):
         return cplt_correct(text, line, begidx, endidx,
                             ['-g', '--get', '--no-rider', {'name': '--file=', 'file': True}])
+
+    """ archive """
+
+    @docopt_cmd
+    def do_archive(self, args):
+        """Usage: archive <tp_slug> [<login>...] [--file=<logins_file>] [--output=<output_file>] [-v|--verbose]"""
+        logins = get_logins(args["--file"], args["<login>"])
+        verbose = args["-v"] or args["--verbose"]
+        cmd_archive(args["<tp_slug>"], logins, args["--output"], verbose)
+
+    def complete_archive(self, text, line, begidx, endidx):
+        return cplt_archive(text, line, begidx, endidx,
+                            [{'name': '--file=', 'file': True}])
 
     """ update """
 

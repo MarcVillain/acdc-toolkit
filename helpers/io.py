@@ -45,7 +45,7 @@ def file_replace(file_path, text_to_search, replacement_text):
             print(line.replace(text_to_search, replacement_text), end='')
 
 
-def folder_ls(folder_path, includes=None, excludes=None):
+def folder_ls(folder_path=".", includes=None, excludes=None):
     if includes is None:
         includes = ['.*']
     if excludes is None:
