@@ -3,6 +3,7 @@
 import cmd
 import os
 import sys
+import shlex
 
 from commands.archive import cmd_archive, cplt_archive
 from commands.edit import cmd_edit, cplt_edit
@@ -41,7 +42,7 @@ def docopt_cmd(func):
 
     def fn(self, arg):
         try:
-            opt = docopt(fn.__doc__, arg)
+            opt = docopt(fn.__doc__, shlex.split(arg))
 
         except DocoptExit as usage:
             print(fn.__doc__)
