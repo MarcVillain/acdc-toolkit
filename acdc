@@ -22,5 +22,11 @@ then
 	rm -r "$DATA_DIR/"
 else
 	update_pipenv
+
+	if ! env | grep -q '^ACDC_DEBUG='
+	then
+		export PYTHONOPTIMIZE=TRUE
+	fi
+
 	pipenv run ./toolkit.py "$@"
 fi

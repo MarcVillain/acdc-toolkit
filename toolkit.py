@@ -4,6 +4,7 @@ import cmd
 import os
 import sys
 import shlex
+import traceback
 
 from commands.archive import cmd_archive, cplt_archive
 from commands.edit import cmd_edit, cplt_edit
@@ -55,7 +56,11 @@ def docopt_cmd(func):
             return func(self, opt)
 
         except Exception as e:
-            print_error(e)
+            if __debug__:
+                print_error('An exception occured:')
+                traceback.print_exc()
+            else:
+                print_error(e)
 
     fn.__name__ = func.__name__
     fn.__doc__ = func.__doc__
