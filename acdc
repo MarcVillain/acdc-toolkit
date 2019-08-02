@@ -1,0 +1,26 @@
+#!/bin/sh
+
+DATA_DIR=@_DATA_DIR_@
+cd "@_INSTALL_DIR_@"
+
+function update_pipenv()
+{
+	REQUIRED="$(md5sum Pipfile.lock | sed 's/\s.*//')"
+	INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
+
+	if [ "$INSTALLED" != $REQUIRED ]
+	then
+		pipenv sync
+		mkdir -p "$DATA_DIR"
+	    echo $REQUIRED > "$DATA_DIR/.installed"
+	fi
+}
+
+if [ $# -eq 1 ] && [ "$1" = 'clean' ]
+then
+	pipenv --rm
+	rm -r "$DATA_DIR/"
+else
+	update_pipenv
+	pipenv run ./toolkit.py "$@"
+fi
