@@ -21,6 +21,11 @@ def print_warning(msg, indent=0, end='\n'):
     print_colored_icon("\033[33m", "!", msg, indent=indent, end=end)
 
 
+def print_debug(msg, indent=0, end='\n'):
+    if __debug__:
+        print_colored_icon("\033[37m", "⚐", msg, indent=indent, end=end)
+
+
 def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):
     icon = "»"
     if percent_pos != -1:
