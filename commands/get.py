@@ -54,7 +54,7 @@ def cmd_get(tp_slug, logins):
             )
             print_success("Download repository", 1)
 
-            if len(folder_ls(tp_folder, excludes=[".*\\..*"])) == 0:
+            if len(folder_ls(repo_folder, excludes=["\..*"])) == 0:
                 print_warning("The repository is empty", 1)
                 continue
 
