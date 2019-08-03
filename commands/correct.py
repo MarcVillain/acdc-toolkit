@@ -20,10 +20,11 @@ from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, pa
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
-from helpers.students import get_downloaded_students
 from helpers.terminal import open_rider
 from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
 from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
+from misc.data import Tp, Submission
+
 
 actions = [
     Previous(),
@@ -197,8 +198,8 @@ def cplt_correct(text, line, begidx, endidx, options):
     args = parse_args(line)
     number = get_arg_number(args, begidx)
     if number > 1:
-        options += get_downloaded_students(args[1][0])
+        options += [ sub.login()
+                     for sub in Tp(args[1][0]).get_local_submissions() ]
     return autocomplete(text, line, begidx, endidx,
-                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                          if 'tp' in folder]],
+                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
                         options)

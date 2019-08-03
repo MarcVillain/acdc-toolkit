@@ -6,9 +6,9 @@ from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, pa
 from helpers.command import exec_in_folder
 from helpers.io import folder_ls, folder_find, folder_create_if_not_exists
 from helpers.terminal import open_subshell
-from helpers.students import get_downloaded_students
-from misc.config import STUDENTS_FOLDER, REPO_FOLDER, ACDC_LOCAL_FOLDER
+from misc.config import REPO_FOLDER, ACDC_LOCAL_FOLDER
 from misc.printer import print_info, print_success
+from misc.data import Tp, Submission
 
 
 def get_all_non_trash_files(student_folder):
@@ -51,6 +51,8 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
     :param output_file: Output file path
     :param verbose: Display more info
     """
+    tp = Tp(tp_slug)
+
     if output_file:
         output_file = os.path.expanduser(output_file)
     else:
@@ -61,7 +63,7 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
 
     zip_file = zipfile.ZipFile(output_file, "w")
 
-    students_folders_path = os.path.join(STUDENTS_FOLDER, tp_slug)
+    students_folders_path = Tp(tp_slug).local_dir()
 
     students_folder = exec_in_folder(students_folders_path,
                                      get_students_folder, tp_slug, logins)
@@ -75,9 +77,9 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
 def cplt_archive(text, line, begidx, endidx, options):
     args = parse_args(line)
     number = get_arg_number(args, begidx)
-    arguments = [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                  if 'tp' in folder]]
+    arguments = [[ tp.slug() for tp in Tp.get_local_tps() ]]
     if number > 1:
-        arguments.append(get_downloaded_students(args[1][0]))
+        arguments.append([ sub.login()
+                           for sub in Tp(args[1][0]).get_local_submissions() ])
     return autocomplete(text, line, begidx, endidx,
                         arguments, options)

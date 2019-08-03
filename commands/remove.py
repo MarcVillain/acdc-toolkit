@@ -1,9 +1,9 @@
 import os
 
 from helpers.autocomplete import autocomplete
-from helpers.io import folder_remove, folder_ls
-from misc.config import STUDENTS_FOLDER, REPO_FOLDER, MOULINETTE_FOLDER
+from helpers.io import folder_remove
 from misc.printer import print_success, print_info, print_error
+from misc.data import Tp, Submission
 
 
 def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
@@ -14,30 +14,29 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
     :param remove_all: Should all the students files be removed
     :param remove_moulinette: Should the moulinette be removed
     """
-    if tp_slug not in folder_ls(STUDENTS_FOLDER):
+    tp = Tp(tp_slug)
+    if not os.path.exists(tp.local_dir()):
         print_error("TP " + tp_slug + " not found")
     else:
-        tp_folder = os.path.join(STUDENTS_FOLDER, tp_slug)
-
         if remove_all or len(logins) is 0:
-            folder_remove(tp_folder)
+            folder_remove(tp.local_dir())
             print_success("Successfully removed " + tp_slug)
         else:
             for i, login in enumerate(logins):
                 print_info("{tp_slug} ({login}) ".format(tp_slug=tp_slug, login=login),
                            percent_pos=i, percent_max=len(logins), end='')
-                student_tp_folder = os.path.join(tp_folder, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
-                try:
-                    folder_remove(student_tp_folder)
-                    print_success('')
-                except IOError:
-                    print_error('')
-                    continue
+                repo = Submission(tp_slug, login)
+                if repo.exists_locally():
+                    try:
+                        folder_remove(repo.local_dir())
+                        print_success('')
+                    except IOError:
+                        print_error('')
+                        continue
 
     if remove_moulinette:
-        moulinette_folder = os.path.join(MOULINETTE_FOLDER, tp_slug)
         try:
-            folder_remove(moulinette_folder)
+            folder_remove(tp.local_moulinette_dir())
             print_success("Successfully removed moulinette " + tp_slug)
         except IOError:
             print_error("Moulinette " + tp_slug + " not found")
@@ -45,6 +44,5 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
 
 def cplt_remove(text, line, begidx, endidx, options):
     return autocomplete(text, line, begidx, endidx,
-                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                          if 'tp' in folder]],
+                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
                         options)

@@ -5,9 +5,10 @@ from helpers.autocomplete import autocomplete
 from helpers.command import exec_in_folder
 from helpers.git import git_checkout_date, git_tag, git_push_tags
 from helpers.io import folder_ls
-from misc.config import SUBMISSION_TAG, STUDENTS_FOLDER, REPO_FOLDER
+from misc.config import SUBMISSION_TAG
 from misc.exceptions import GitException
 from misc.printer import print_error, print_info, print_success
+from misc.data import Tp, Submission
 
 
 def cmd_tag(tp_slug, tag_name, date, logins):
@@ -25,7 +26,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
 
     for i, login in enumerate(logins):
         print_info(login + ":", percent_pos=i, percent_max=len(logins))
-        folder = os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
+        folder = Submission(tp_slug, login).local_dir()
 
         try:
             exec_in_folder(folder, git_checkout_date, date, "23:42")
@@ -51,6 +52,5 @@ def cmd_tag(tp_slug, tag_name, date, logins):
 
 def cplt_tag(text, line, begidx, endidx, options):
     return autocomplete(text, line, begidx, endidx,
-                        [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                          if 'tp' in folder]],
+                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
                         options)
