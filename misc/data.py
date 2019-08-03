@@ -53,7 +53,7 @@ class Submission:
     which can hold a copy.
     """
     def __init__(self, tp, login):
-        if tp is Tp:
+        if isinstance(tp, Tp):
             self._tp = tp
         else:
             self._tp = Tp(tp)

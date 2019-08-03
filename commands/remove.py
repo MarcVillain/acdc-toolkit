@@ -23,9 +23,12 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
             print_success("Successfully removed " + tp_slug)
         else:
             for i, login in enumerate(logins):
-                print_info("{tp_slug} ({login}) ".format(tp_slug=tp_slug, login=login),
-                           percent_pos=i, percent_max=len(logins), end='')
-                repo = Submission(tp_slug, login)
+                repo = Submission(tp, login)
+                print_info(
+                    "{tp_slug} ({login}) ".format(
+                        tp_slug=repo.tp().slug(),
+                        login=repo.login()),
+                    percent_pos=i, percent_max=len(logins), end='')
                 if repo.exists_locally():
                     try:
                         folder_remove(repo.local_dir())
@@ -33,6 +36,9 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
                     except IOError:
                         print_error('')
                         continue
+                else:
+                    print_error('')
+
 
     if remove_moulinette:
         try:
