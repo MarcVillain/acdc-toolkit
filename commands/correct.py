@@ -16,7 +16,7 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
-from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, parse_args
+from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_logins_for_tp
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
@@ -194,12 +194,10 @@ def cmd_correct(tp_slug, no_rider, logins, get_rendus):
                    no_rider, logins, tp_slug)
 
 
-def cplt_correct(text, line, begidx, endidx, options):
-    args = parse_args(line)
-    number = get_arg_number(args, begidx)
-    if number > 1:
-        options += [ sub.login()
-                     for sub in Tp(args[1][0]).get_local_submissions() ]
-    return autocomplete(text, line, begidx, endidx,
-                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
-                        options)
+CPLT = CmdCompletor(
+    [ '-g', '--get', '--no-rider' ],
+    { '--file=': enum_files },
+    [ enum_tp_slugs, enum_logins_for_tp ])
+
+def cplt_correct(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

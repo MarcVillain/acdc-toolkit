@@ -1,6 +1,6 @@
 import os
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import CmdCompletor, enum_tp_slugs
 from helpers.io import folder_ls
 from misc.printer import print_info
 from misc.data import Tp, Submission
@@ -20,7 +20,10 @@ def cmd_list(tp_slug):
             print_info(repo.login())
 
 
-def cplt_list(text, line, begidx, endidx, options):
-    return autocomplete(text, line, begidx, endidx,
-                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
-                        options)
+CPLT = CmdCompletor(
+    [],
+    {},
+    [ enum_tp_slugs ])
+
+def cplt_list(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

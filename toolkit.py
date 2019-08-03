@@ -13,7 +13,7 @@ from helpers.other import get_logins
 try:
     import readline
 
-    readline.set_completer_delims(' =')
+    readline.set_completer_delims(' ')
 except ImportError:
     readline = None
 
@@ -135,8 +135,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_get(tp_slug, logins)
 
     def complete_get(self, text, line, begidx, endidx):
-        return cplt_get(text, line, begidx, endidx,
-                        [{'name': '--file=', 'file': True}])
+        return cplt_get(text, line, begidx, endidx)
 
     """ remove """
 
@@ -152,7 +151,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_remove(args['<tp_slug>'], logins, remove_all, remove_moulinette)
 
     def complete_remove(self, text, line, begidx, endidx):
-        return cplt_remove(text, line, begidx, endidx, ['-a', '--all'])
+        return cplt_remove(text, line, begidx, endidx)
 
     """ list """
 
@@ -162,7 +161,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_list(args["<tp_slug>"])
 
     def complete_list(self, text, line, begidx, endidx):
-        return cplt_list(text, line, begidx, endidx, [])
+        return cplt_list(text, line, begidx, endidx)
 
     """ edit """
 
@@ -172,7 +171,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_edit(args["<tp_slug>"], args["<login>"])
 
     def complete_edit(self, text, line, begidx, endidx):
-        return cplt_edit(text, line, begidx, endidx, [])
+        return cplt_edit(text, line, begidx, endidx)
 
     """ tag """
 
@@ -186,8 +185,7 @@ class CommandDispatcher(cmd.Cmd):
                 logins)
 
     def complete_tag(self, text, line, begidx, endidx):
-        return cplt_tag(text, line, begidx, endidx,
-                        ['--name=', {'name': '--file=', 'file': True}])
+        return cplt_tag(text, line, begidx, endidx)
 
     """ correct """
 
@@ -199,8 +197,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_correct(args["<tp_slug>"], args["--no-rider"], logins, get_rendus)
 
     def complete_correct(self, text, line, begidx, endidx):
-        return cplt_correct(text, line, begidx, endidx,
-                            ['-g', '--get', '--no-rider', {'name': '--file=', 'file': True}])
+        return cplt_correct(text, line, begidx, endidx)
 
     """ archive """
 
@@ -212,8 +209,7 @@ class CommandDispatcher(cmd.Cmd):
         cmd_archive(args["<tp_slug>"], logins, args["--output"], verbose)
 
     def complete_archive(self, text, line, begidx, endidx):
-        return cplt_archive(text, line, begidx, endidx,
-                            [{'name': '--file=', 'file': True}])
+        return cplt_archive(text, line, begidx, endidx)
 
     """ update """
 

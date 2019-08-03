@@ -1,6 +1,6 @@
 import os
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins_for_tp, enum_files
 from helpers.io import folder_remove
 from misc.printer import print_success, print_info, print_error
 from misc.data import Tp, Submission
@@ -48,7 +48,10 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
             print_error("Moulinette " + tp_slug + " not found")
 
 
-def cplt_remove(text, line, begidx, endidx, options):
-    return autocomplete(text, line, begidx, endidx,
-                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
-                        options)
+CPLT = CmdCompletor(
+    [ '-a', '--all', '-m', '--moulinette' ],
+    { '--file=': enum_files },
+    [ enum_tp_slugs, enum_logins_for_tp ])
+
+def cplt_remove(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

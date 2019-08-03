@@ -24,6 +24,10 @@ class Tp:
         return os.path.join(MOULINETTE_FOLDER, self.slug())
 
 
+    def exists_locally(self):
+        return os.path.exists(self.local_dir())
+
+
     def get_local_submissions(self):
         submissions = []
         if os.path.exists(self.local_dir()):

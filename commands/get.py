@@ -1,6 +1,6 @@
 import os
 
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins, enum_files
 from helpers.command import exec_in_folder
 from helpers.git import git_clone, git_checkout_tag
 from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove, folder_ls
@@ -76,7 +76,10 @@ def cmd_get(tp_slug, logins):
             print_error("Checkout: Tag " + SUBMISSION_TAG + " not found", 1)
 
 
-def cplt_get(text, line, begidx, endidx, options):
-    return autocomplete(text, line, begidx, endidx,
-                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
-                        options)
+CPLT = CmdCompletor(
+    [],
+    { '--files=': enum_files },
+    [ enum_tp_slugs, enum_logins ])
+
+def cplt_get(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

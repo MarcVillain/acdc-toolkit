@@ -1,7 +1,7 @@
 import os
 
 from commands.get import cmd_get
-from helpers.autocomplete import autocomplete
+from helpers.autocomplete import CmdCompletor, enum_files, enum_nothing, enum_dates, enum_tp_slugs, enum_logins_for_tp
 from helpers.command import exec_in_folder
 from helpers.git import git_checkout_date, git_tag, git_push_tags
 from helpers.io import folder_ls
@@ -50,7 +50,10 @@ def cmd_tag(tp_slug, tag_name, date, logins):
             continue
 
 
-def cplt_tag(text, line, begidx, endidx, options):
-    return autocomplete(text, line, begidx, endidx,
-                        [[ tp.slug() for tp in Tp.get_local_tps() ]],
-                        options)
+CPLT = CmdCompletor(
+    [],
+    { '--file=': enum_files, '--name=': enum_nothing },
+    [ enum_tp_slugs, enum_dates, enum_logins_for_tp ])
+
+def cplt_tag(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

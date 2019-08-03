@@ -1,165 +1,169 @@
 import os
 import pwd
+import re
+import datetime
 
 from helpers.io import folder_ls
+from helpers.other import get_logins
+from misc.data import Tp, Submission
 
 
-def _progress_in_line(line, i, filter):
-    while i < len(line) and filter(line[i]):
-        i += 1
-    return i
+def filter_proposals(proposals, text):
+    starting = set()
+    for entry in proposals:
+        if entry[:len(text)] == text:
+            starting.add(entry)
+    containing = set()
+    for entry in proposals:
+        if text in entry[1:] and not entry in starting:
+            containing.add(entry)
+    return list(starting) + list(containing)
 
 
-def parse_args(line):
-    args = []
-    end = 0
-    start = _progress_in_line(line, 0, lambda c: c == ' ')
-    while start < len(line):
-        end = _progress_in_line(line, start, lambda c: c != ' ')
-        args.append((line[start:end], start, end))
-        start = _progress_in_line(line, end, lambda c: c == ' ')
-    return args
-
-
-def get_arg_number(args, begidx):
-    i = 0
-    for arg, start, end in args:
-        if begidx <= end:
-            return i
-        i += 1
-    return i
-
-
-def get_arg_value(args, begidx):
-    for arg, start, end in args:
-        if begidx <= end:
-            if start > begidx:
-                return ''
-            return arg
-    return ''
-
-
-def validate(text, arg):
-    if isinstance(arg, dict):
-        return arg['name'].startswith(text)
-    else:
-        return arg.startswith(text)
-
-
-def sanitize(args):
-    return [arg['name'] if isinstance(arg, dict) else arg for arg in args]
-
-
-def find_matches(text, arguments):
-    return [arg
-            for arg in arguments
-            if validate(text, arg)]
-
-
-def autocomplete_path(text, name):
-    value = text[len(name):]
-    sep = value.rfind(os.path.sep)
-    # If there is no / in the path
-    if sep == -1:
-        if len(value) > 0 and value[0] == '~':
-            value = value[1:]
-            users = sorted([u[0] for u in pwd.getpwall()])
-            return ['~' + u
-                    for u in users
-                    if u.startswith(value)]
-        dir = '.'
-        dir_join = ''
-        file = value
-    # If the only / is at the start
-    elif sep == 0:
-        dir = os.path.sep
-        dir_join = os.path.sep
-        file = value[sep + 1:]
-    # Otherwise
-    else:
-        dir = value[:sep]
-        dir_join = dir + os.path.sep
-        file = value[sep + 1:]
-    return [dir_join + f
-            for f in folder_ls(os.path.expanduser(dir))
-            if f.startswith(file)]
-
-
-def add_trailing(matches, isLast, isFile=False):
-    matches = sanitize(matches)
-    if len(matches) != 1:
-        return matches
-    elif not isFile:
-        if isLast:
-            return [matches[0] + ' ']
-        else:
-            return matches
-    elif os.path.isdir(os.path.expanduser(matches[0])):
-        return [matches[0] + os.path.sep]
-    else:
-        if isLast:
-            return [matches[0] + ' ']
-        else:
-            return matches
-
-
-def filter_autocomplete(text, arguments, isLast):
-    # Find all matches matching starting with text
-    matches = find_matches(text, arguments)
-    if len(matches) > 1:
-        # If there is more than one match, return the matches
-        return sanitize(matches)
-    elif len(matches) == 1:
-        # If there is only one match,
-        # but it is equal to the text and ends with =,
-        # try to match with value value
-        match = matches[0]
-        if not isinstance(match, dict):
-            if match[-1] == '=':
-                return sanitize(matches)
-            else:
-                return add_trailing(matches, isLast)
-        if match['name'] != text:
-            return sanitize(matches)
-        name = match['name']
-        if name[-1] != '=':
-            return add_trailing(matches, isLast)
-    else:
-        # If there is no match,
-        # split text with equals sign,
-        # and start again
-        matches = find_matches(text.partition('=')[0], arguments)
-        if len(matches) != 1:
-            return []
-        match = matches[0]
-        if not isinstance(match, dict):
-            return []
-        name = match['name']
-        if name[-1] != '=':
-            return []
-    # If we should match a file after the equals sign
-    if 'file' in match and match['file']:
-        return add_trailing(autocomplete_path(text, name), isLast, isFile=True)
+def enum_nothing(text, line):
     return []
 
 
-def remove_duplicates(options, args, current, nb_args):
-    used = [arg
-            for i, (arg, start, end) in enumerate(args)
-            if i > nb_args and i != current]
-    return [option
-            for option in options
-            if option not in used]
-
-
-def autocomplete(text, line, begidx, endidx, arguments, options):
-    args = parse_args(line)
-    number = get_arg_number(args, begidx)
-    if begidx > 0 and line[begidx - 1] == '=':
-        while begidx > 0 and line[begidx - 1] != ' ':
-            begidx -= 1
-        text = line[begidx:endidx]
-    if number <= len(arguments):
-        return filter_autocomplete(text, arguments[number - 1], len(line) == endidx)
+def enum_dates(text, line):
+    now = datetime.datetime.now().strftime('%Y-%m-%d')
+    if now[:len(text)] == text:
+        return [ now+' ' ]
     else:
-        return filter_autocomplete(text, remove_duplicates(options, args, number, len(arguments)), len(line) == endidx)
+        return []
+
+
+def enum_logins(text, line):
+    try:
+        return [ login+' '
+                 for login in filter_proposals(get_logins(None), text) ]
+    except:
+        return []
+
+
+def enum_tp_slugs(text, line):
+    return filter_proposals(
+        [ tp.slug()+' ' for tp in Tp.get_local_tps() ],
+        text)
+
+
+def enum_logins_for_tp(text, line):
+    logins = []
+    for arg in line.replace('=', ' ').split(' ')[1:]:
+        if len(arg) != 0 and arg[0] != '-':
+            tp = Tp(arg)
+            if tp.exists_locally():
+                logins += [ sub.login()+' '
+                            for sub in tp.get_local_submissions() ]
+    return filter_proposals(logins, text)
+
+
+def enum_files(text, line):
+    if len(text) == 0:
+        text = os.path.curdir
+    else:
+        text = os.path.expanduser(text)
+    parent = os.path.abspath(os.path.join(text, os.path.pardir))
+    if text[-1] == os.path.sep:
+        if os.path.isdir(text):
+            parent = text
+            entries = folder_ls(parent, excludes=['\\..*'])
+        elif os.path.exists(text[:-1]):
+            return [ text[:-1]+' ' ]
+        else:
+            return []
+    elif os.path.isdir(text):
+        return [ os.path.join(text, '') ]
+    elif os.path.isdir(parent):
+        basename = os.path.basename(text)
+        entries = folder_ls(
+            parent,
+            includes=['.*'+re.escape(basename)+'.*'],
+            excludes=[] if basename[0] == '.' else ['\\..*'])
+        entries = filter_proposals(entries, basename)
+    else:
+        return []
+    for i in range(len(entries)):
+        entry = os.path.join(parent, entries[i])
+        entry += os.path.sep if os.path.isdir(entry) else ' '
+        entries[i] = entry
+    return entries
+
+
+class CmdCompletor:
+    def __init__(self, options, opts_enum_funcs, positional_enum_funcs):
+        self._options = options + list(opts_enum_funcs.keys())
+        self._opts_enum_funcs = opts_enum_funcs
+        self._positional_enum_funcs = positional_enum_funcs
+
+
+    def _get_position(self, line, index):
+        position = -1
+        in_option = False
+        in_word = False
+        for c in line[:index]:
+            now_in_word = c != ' '
+            if in_word and not now_in_word and not in_option:
+                position += 1
+            if not in_word and c == '-':
+                in_option = True
+            if not now_in_word:
+                in_option = False
+            in_word = now_in_word
+        return position
+
+
+    def _complete_option_value(self, text, line):
+        sep = text.find('=') + 1
+        option = text[:sep]
+        value = text[sep:]
+        if not (option in self._opts_enum_funcs):
+            return []
+        entries = self._opts_enum_funcs[option](value, line)
+        return [ option+entry for entry in entries ]
+
+
+    def _complete_positional(self, text, line, position):
+        if position < len(self._positional_enum_funcs):
+            return self._positional_enum_funcs[position](text, line)
+        else:
+            return self._positional_enum_funcs[-1](text, line)
+
+
+    def _complete_long_option(self, text):
+        return [ (op if op[-1] == '=' else op+' ')
+                 for op in self._options
+                 if op[:len(text)] == text ]
+
+
+    def _suggest_short_options(self, text):
+        return [ text+op[1]+' '
+                 for op in self._options
+                 if (len(op) == 2 and not op[1] in text) ]
+
+
+    def _suggest_options(self):
+        return [ (op if op[-1] == '=' else op+' ')
+                 for op in self._options ]
+
+
+    def _suggest_any(self, line, position):
+        return self._suggest_options() \
+            + self._complete_positional('', line, position)
+
+
+    def complete(self, text, line, begidx, endidx):
+        assert len(line) != 0
+        if len(text) == 0:
+            return self._suggest_any(line, self._get_position(line, begidx))
+        elif re.search('^--[a-zA-Z0-9_-]+=', text) is not None:
+            return self._complete_option_value(text, line)
+        elif text[0] == '-':
+            if len(text) == 1:
+                return self._suggest_options()
+            elif text[1] == '-':
+                return self._complete_long_option(text)
+            else:
+                return self._suggest_short_options(text)
+        else:
+            return self._complete_positional(
+                text, line, self._get_position(line, begidx))
