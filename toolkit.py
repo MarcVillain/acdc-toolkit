@@ -108,6 +108,7 @@ class CommandDispatcher(cmd.Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+                self.postloop()
 
     def postloop(self):
         if readline:
