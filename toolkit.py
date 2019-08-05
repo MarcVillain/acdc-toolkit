@@ -283,9 +283,19 @@ class CommandDispatcher(cmd.Cmd):
         return False
 
 
+def handle_global_options(argv):
+    WD_OPT='--working-directory='
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith(WD_OPT):
+            os.chdir(argv[i][len(WD_OPT):])
+            del argv[i]
+        else:
+            i += 1
+
+
 if __name__ == '__main__':
-    if os.path.dirname(sys.argv[0]) != '':
-        os.chdir(os.path.dirname(sys.argv[0]))
+    handle_global_options(sys.argv)
     dispatcher = CommandDispatcher()
     if len(sys.argv) > 1:
         line = ' '.join(sys.argv[1:])

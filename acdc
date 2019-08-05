@@ -1,6 +1,7 @@
 #!/bin/sh
 
 DATA_DIR=@_DATA_DIR_@
+TARGET_WD="$(pwd)"
 cd "@_INSTALL_DIR_@"
 
 function update_pipenv()
@@ -28,5 +29,5 @@ else
 		export PYTHONOPTIMIZE=TRUE
 	fi
 
-	pipenv run ./toolkit.py "$@"
+	pipenv run ./toolkit.py --working-directory="$TARGET_WD" "$@"
 fi
