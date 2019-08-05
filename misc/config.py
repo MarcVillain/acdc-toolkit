@@ -19,3 +19,7 @@ REPO_URL = "git@git.cri.epita.fr:p/" + str(SUP_YEAR) + "-sup-tp/" + REPO_FOLDER
 SUBMISSION_TAG = "submission"
 
 MOULINETTE_REPO = "git@gitlab.com:acdc_epita/" + str(ACDC_YEAR) + "/{tp_slug}.git"
+
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1 # external cause
+EXIT_UNEXPECTED = 2 # bad user input/internal error/bug

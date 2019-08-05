@@ -5,7 +5,7 @@ from helpers.autocomplete import CmdCompletor, enum_files, enum_nothing, enum_da
 from helpers.command import exec_in_folder
 from helpers.git import git_checkout_date, git_tag, git_push_tags
 from helpers.io import folder_ls
-from misc.config import SUBMISSION_TAG
+from misc.config import SUBMISSION_TAG, EXIT_SUCCESS, EXIT_FAILURE
 from misc.exceptions import GitException
 from misc.printer import print_error, print_info, print_success
 from misc.data import Tp, Submission
@@ -27,12 +27,14 @@ def cmd_tag(tp_slug, tag_name, date, logins):
     for i, login in enumerate(logins):
         print_info(login + ":", percent_pos=i, percent_max=len(logins))
         folder = Submission(tp_slug, login).local_dir()
+        success = True
 
         try:
             exec_in_folder(folder, git_checkout_date, date, "23:42")
             print_success("Checkout last commit before " + date + " 23:42", 1)
         except GitException as e:
             print_error("Checkout: " + str(e), 1)
+            success = False
             continue
 
         try:
@@ -40,6 +42,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
             print_success("Tagging commit", 1)
         except GitException as e:
             print_error("Tagging: " + str(e), 1)
+            success = False
             continue
 
         try:
@@ -47,7 +50,10 @@ def cmd_tag(tp_slug, tag_name, date, logins):
             print_success("Tagging commit", 1)
         except GitException as e:
             print_error("Tagging: " + str(e), 1)
+            success = False
             continue
+
+        return EXIT_SUCCESS if success else EXIT_FAILURE
 
 
 CPLT = CmdCompletor(

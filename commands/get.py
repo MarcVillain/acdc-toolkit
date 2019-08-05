@@ -4,7 +4,7 @@ from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins, enum_
 from helpers.command import exec_in_folder
 from helpers.git import git_clone, git_checkout_tag
 from helpers.io import folder_create_if_not_exists, folder_exists, folder_remove, folder_ls
-from misc.config import SUBMISSION_TAG
+from misc.config import SUBMISSION_TAG, EXIT_SUCCESS, EXIT_FAILURE
 from misc.exceptions import GitException
 from misc.printer import print_success, print_info, print_error, print_ask, print_warning
 from misc.data import Tp, Submission
@@ -18,6 +18,7 @@ def cmd_get(tp_slug, logins):
     """
     tp = Tp(tp_slug)
     overwrite = None
+    success = True
 
     # For each student
     for i, login in enumerate(logins):
@@ -62,6 +63,7 @@ def cmd_get(tp_slug, logins):
 
         except GitException as e:
             print_error("Download: Repository not found", 1)
+            success = False
             continue
 
         try:
@@ -74,6 +76,9 @@ def cmd_get(tp_slug, logins):
 
         except GitException as e:
             print_error("Checkout: Tag " + SUBMISSION_TAG + " not found", 1)
+            success = False
+
+    return EXIT_SUCCESS if success else EXIT_FAILURE
 
 
 CPLT = CmdCompletor(

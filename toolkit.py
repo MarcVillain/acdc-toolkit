@@ -9,6 +9,7 @@ import traceback
 from commands.archive import cmd_archive, cplt_archive
 from commands.edit import cmd_edit, cplt_edit
 from helpers.other import get_logins
+from misc.config import EXIT_SUCCESS, EXIT_UNEXPECTED
 
 try:
     import readline
@@ -47,10 +48,12 @@ def docopt_cmd(func):
 
         except DocoptExit as usage:
             print(fn.__doc__)
-            return
+            self._last_exit_status = EXIT_UNEXPECTED
+            return False
 
-        except SystemExit:
-            return
+        except SystemExit as e:
+            self._last_exit_status = e.code
+            return True
 
         try:
             return func(self, opt)
@@ -61,6 +64,8 @@ def docopt_cmd(func):
                 traceback.print_exc()
             else:
                 print_error(e)
+            self._last_exit_status = EXIT_UNEXPECTED
+            return True
 
     fn.__name__ = func.__name__
     fn.__doc__ = func.__doc__
@@ -92,6 +97,13 @@ class CommandDispatcher(cmd.Cmd):
 
     prompt = "ACDC Toolkit $ "
     file = None
+
+    def __init__(self):
+        self._last_exit_status = EXIT_SUCCESS
+        super().__init__()
+
+    def last_exit_status(self):
+        return self._last_exit_status
 
     def preloop(self):
         if readline and os.path.exists(HISTORY_FILE):
@@ -132,7 +144,8 @@ class CommandDispatcher(cmd.Cmd):
         """Usage: get <tp_slug> [<login>...] [--file=<logins_file>]"""
         tp_slug = args["<tp_slug>"]
         logins = get_logins(args["--file"], args["<login>"])
-        cmd_get(tp_slug, logins)
+        self._last_exit_status = cmd_get(tp_slug, logins)
+        return False
 
     def complete_get(self, text, line, begidx, endidx):
         return cplt_get(text, line, begidx, endidx)
@@ -148,7 +161,9 @@ class CommandDispatcher(cmd.Cmd):
             logins = []
         else:
             logins = get_logins(args["--file"], args["<login>"])
-        cmd_remove(args['<tp_slug>'], logins, remove_all, remove_moulinette)
+        self._last_exit_status = cmd_remove(
+            args['<tp_slug>'], logins, remove_all, remove_moulinette)
+        return False
 
     def complete_remove(self, text, line, begidx, endidx):
         return cplt_remove(text, line, begidx, endidx)
@@ -158,7 +173,8 @@ class CommandDispatcher(cmd.Cmd):
     @docopt_cmd
     def do_list(self, args):
         """Usage: list [<tp_slug>]"""
-        cmd_list(args["<tp_slug>"])
+        self._last_exit_status = cmd_list(args["<tp_slug>"])
+        return False
 
     def complete_list(self, text, line, begidx, endidx):
         return cplt_list(text, line, begidx, endidx)
@@ -168,7 +184,8 @@ class CommandDispatcher(cmd.Cmd):
     @docopt_cmd
     def do_edit(self, args):
         """Usage: edit <tp_slug> <login>"""
-        cmd_edit(args["<tp_slug>"], args["<login>"])
+        self._last_exit_status = cmd_edit(args["<tp_slug>"], args["<login>"])
+        return False
 
     def complete_edit(self, text, line, begidx, endidx):
         return cplt_edit(text, line, begidx, endidx)
@@ -179,10 +196,12 @@ class CommandDispatcher(cmd.Cmd):
     def do_tag(self, args):
         """Usage: tag <tp_slug> <date:yyyy-mm-dd> [<login>...] [--file=<logins_file>] [--name=<tag_name>]"""
         logins = get_logins(args["--file"], args["<login>"])
-        cmd_tag(args["<tp_slug>"],
-                args["--name"],
-                args["<date:yyyy-mm-dd>"],
-                logins)
+        self._last_exit_status = cmd_tag(
+            args["<tp_slug>"],
+            args["<date:yyyy-mm-dd>"],
+            args["--name"],
+            logins)
+        return False
 
     def complete_tag(self, text, line, begidx, endidx):
         return cplt_tag(text, line, begidx, endidx)
@@ -194,7 +213,9 @@ class CommandDispatcher(cmd.Cmd):
         """Usage: correct <tp_slug> [<login>...] [--file=<logins_file>] [-g|--get] [--no-rider]"""
         logins = get_logins(args["--file"], args["<login>"])
         get_rendus = args["-g"] or args["--get"]
-        cmd_correct(args["<tp_slug>"], args["--no-rider"], logins, get_rendus)
+        self._last_exit_status = cmd_correct(
+            args["<tp_slug>"], args["--no-rider"], logins, get_rendus)
+        return False
 
     def complete_correct(self, text, line, begidx, endidx):
         return cplt_correct(text, line, begidx, endidx)
@@ -206,7 +227,9 @@ class CommandDispatcher(cmd.Cmd):
         """Usage: archive <tp_slug> [<login>...] [--file=<logins_file>] [--output=<output_file>] [-v|--verbose]"""
         logins = get_logins(args["--file"], args["<login>"])
         verbose = args["-v"] or args["--verbose"]
-        cmd_archive(args["<tp_slug>"], logins, args["--output"], verbose)
+        self._last_exit_status = cmd_archive(
+            args["<tp_slug>"], logins, args["--output"], verbose)
+        return False
 
     def complete_archive(self, text, line, begidx, endidx):
         return cplt_archive(text, line, begidx, endidx)
@@ -216,7 +239,8 @@ class CommandDispatcher(cmd.Cmd):
     @docopt_cmd
     def do_update(self, args):
         """Usage: update"""
-        cmd_update()
+        self._last_exit_status = cmd_update()
+        return False
 
     """                    """
     """  Default commands  """
@@ -226,6 +250,8 @@ class CommandDispatcher(cmd.Cmd):
     def do_clear(self, args):
         """Usage: clear"""
         os.system("clear")
+        self._last_exit_status = EXIT_SUCCESS
+        return False
 
     @docopt_cmd
     def do_help(self, args):
@@ -238,6 +264,8 @@ class CommandDispatcher(cmd.Cmd):
                 for line in str(FUNC_DOC[cmd]).splitlines():
                     if "Usage: " in line:
                         print("    " + line.replace("Usage: ", ""))
+        self._last_exit_status = EXIT_SUCCESS
+        return False
 
     @docopt_cmd
     def do_exit(self, args):
@@ -246,11 +274,13 @@ class CommandDispatcher(cmd.Cmd):
 
     def default(self, command):
         if command is "EOF":
+            self._last_exit_status = EXIT_SUCCESS
             print("exit")
             return True
-        if command is "":
-            return
-        print(str(command).split(" ")[0] + ": command not found")
+        if command is not "":
+            self._last_exit_status = EXIT_UNEXPECTED
+            print(str(command).split(" ")[0] + ": command not found")
+        return False
 
 
 if __name__ == '__main__':
@@ -259,7 +289,7 @@ if __name__ == '__main__':
     dispatcher = CommandDispatcher()
     if len(sys.argv) > 1:
         line = ' '.join(sys.argv[1:])
-        line = dispatcher.precmd(line)
-        stop = dispatcher.onecmd(line)
+        dispatcher.onecmd(line)
+        sys.exit(dispatcher.last_exit_status())
     else:
         dispatcher.cmdloop()

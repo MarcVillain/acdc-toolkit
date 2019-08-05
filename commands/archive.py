@@ -6,7 +6,7 @@ from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_l
 from helpers.command import exec_in_folder
 from helpers.io import folder_ls, folder_find, folder_create_if_not_exists
 from helpers.terminal import open_subshell
-from misc.config import REPO_FOLDER, ACDC_LOCAL_FOLDER
+from misc.config import REPO_FOLDER, ACDC_LOCAL_FOLDER, EXIT_SUCCESS, EXIT_FAILURE
 from misc.printer import print_info, print_success
 from misc.data import Tp, Submission
 
@@ -63,7 +63,10 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
 
     zip_file = zipfile.ZipFile(output_file, "w")
 
-    students_folders_path = Tp(tp_slug).local_dir()
+    if not tp.exists_locally():
+        return EXIT_FAILURE
+
+    students_folders_path = tp.local_dir()
 
     students_folder = exec_in_folder(students_folders_path,
                                      get_students_folder, tp_slug, logins)
@@ -72,6 +75,7 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
                    archive_current_folder, students_folder, zip_file, verbose)
 
     print_success("Archive successfully created (" + output_file + ")")
+    return EXIT_SUCCESS
 
 
 CPLT = CmdCompletor(

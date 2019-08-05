@@ -4,6 +4,7 @@ from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins_for_tp
 from helpers.io import folder_ls
 from helpers.terminal import open_subshell
 from misc.printer import print_error
+from misc.config import EXIT_SUCCESS, EXIT_FAILURE
 from misc.data import Tp, Submission
 
 
@@ -16,8 +17,10 @@ def cmd_edit(tp_slug, login):
     repo = Submission(tp_slug, login)
     if repo.exists_locally():
         open_subshell(repo.local_dir())
+        return EXIT_SUCCESS
     else:
         print_error('Repository not found locally.')
+        return EXIT_FAILURE
 
 
 CPLT = CmdCompletor(

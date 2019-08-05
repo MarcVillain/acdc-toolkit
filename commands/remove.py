@@ -3,6 +3,7 @@ import os
 from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins_for_tp, enum_files
 from helpers.io import folder_remove
 from misc.printer import print_success, print_info, print_error
+from misc.config import EXIT_SUCCESS, EXIT_FAILURE
 from misc.data import Tp, Submission
 
 
@@ -14,6 +15,7 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
     :param remove_all: Should all the students files be removed
     :param remove_moulinette: Should the moulinette be removed
     """
+    success = True
     tp = Tp(tp_slug)
     if not os.path.exists(tp.local_dir()):
         print_error("TP " + tp_slug + " not found")
@@ -35,17 +37,15 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
                         print_success('')
                     except IOError:
                         print_error('')
+                        success = False
                         continue
                 else:
                     print_error('')
 
+    if remove_moulinette and tp.moulinette_exists_locally():
+        folder_remove(tp.local_moulinette_dir())
 
-    if remove_moulinette:
-        try:
-            folder_remove(tp.local_moulinette_dir())
-            print_success("Successfully removed moulinette " + tp_slug)
-        except IOError:
-            print_error("Moulinette " + tp_slug + " not found")
+    return EXIT_SUCCESS if success else EXIT_FAILURE
 
 
 CPLT = CmdCompletor(

@@ -21,7 +21,7 @@ from helpers.command import exec_in_folder
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create
 from helpers.terminal import open_rider
-from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER
+from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS
 from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
 from misc.data import Tp, Submission
 
@@ -192,6 +192,8 @@ def cmd_correct(tp_slug, no_rider, logins, get_rendus):
     exec_in_folder(tp_folder,
                    run_moulinette,
                    no_rider, logins, tp_slug)
+
+    return EXIT_SUCCESS
 
 
 CPLT = CmdCompletor(

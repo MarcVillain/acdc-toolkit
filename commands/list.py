@@ -3,6 +3,7 @@ import os
 from helpers.autocomplete import CmdCompletor, enum_tp_slugs
 from helpers.io import folder_ls
 from misc.printer import print_info
+from misc.config import EXIT_SUCCESS
 from misc.data import Tp, Submission
 
 
@@ -18,6 +19,7 @@ def cmd_list(tp_slug):
         tp = Tp(tp_slug)
         for repo in tp.get_local_submissions():
             print_info(repo.login())
+    return EXIT_SUCCESS
 
 
 CPLT = CmdCompletor(

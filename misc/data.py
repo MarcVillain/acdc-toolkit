@@ -28,6 +28,10 @@ class Tp:
         return os.path.exists(self.local_dir())
 
 
+    def moulinette_exists_locally(self):
+        return os.path.exists(self.local_moulinette_dir())
+
+
     def get_local_submissions(self):
         submissions = []
         if os.path.exists(self.local_dir()):
