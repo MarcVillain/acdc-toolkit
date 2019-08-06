@@ -49,8 +49,11 @@ class Tp:
 
 
     def get_local_tps():
-        return [ Tp(entry) for entry in folder_ls(STUDENTS_FOLDER)
-                 if 'tp' in entry ]
+        if os.path.isdir(STUDENTS_FOLDER):
+            return [ Tp(entry) for entry in folder_ls(STUDENTS_FOLDER)
+                     if 'tp' in entry ]
+        else:
+            return []
 
 
 class Submission:
