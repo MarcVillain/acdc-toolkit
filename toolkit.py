@@ -141,7 +141,7 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_get(self, args):
-        """Usage: get TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [-o|-k]
+        """Usage: get TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--overwrite|--keep]
 
 Download student submissions for working on them locally.
 
@@ -150,10 +150,9 @@ Arguments:
   LOGIN    login for witch a submission must be downloaded
 
 Options:
-  --file <LOGINS_FILE>  path to a login list
-  -o, --overwrite       if already downloaded, overwrite without asking
-  -k, --keep            if already downloaded, skip without asking
-        """
+  --file=LOGINS_FILE  path to a login list
+  -o, --overwrite     if already downloaded, overwrite without asking
+  -k, --keep          if already downloaded, skip without asking"""
         tp_slug = args['TP_SLUG']
         logins = get_logins(args['--file'], args['LOGIN'])
         overwrite_policy = None
@@ -171,15 +170,26 @@ Options:
 
     @docopt_cmd
     def do_remove(self, args):
-        """Usage: remove <tp_slug> [<login>...] [--file=<logins_file>] [-a|--all] [-m|--moulinette]"""
-        remove_all = args["-a"] or args["--all"]
-        remove_moulinette = args["-m"] or args["--moulinette"]
+        """Usage: remove TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--all] [--moulinette]
+
+Remove local copies of student submissions.
+
+Arguments:
+  TP_SLUG  name of the concerned TP
+  LOGIN    login for witch a submission must be removed
+
+Options:
+  --file=LOGINS_FILE  path to a login list
+  -a, --all           remove all submissions for this TP
+  -m, --moulinette    remove the moulinette along with the submissions"""
+        remove_all = args["--all"]
+        remove_moulinette = args["--moulinette"]
         if remove_all:
             logins = []
         else:
-            logins = get_logins(args["--file"], args["<login>"])
+            logins = get_logins(args["--file"], args["LOGIN"])
         self._last_exit_status = cmd_remove(
-            args['<tp_slug>'], logins, remove_all, remove_moulinette)
+            args['TP_SLUG'], logins, remove_all, remove_moulinette)
         return False
 
     def complete_remove(self, text, line, begidx, endidx):
@@ -189,8 +199,12 @@ Options:
 
     @docopt_cmd
     def do_list(self, args):
-        """Usage: list [<tp_slug>]"""
-        self._last_exit_status = cmd_list(args["<tp_slug>"])
+        """Usage: list
+       list TP_SLUG
+
+In the first form, list all TPs for which submissions are available locally.
+In the the second form, list all submissions for a given TP."""
+        self._last_exit_status = cmd_list(args["TP_SLUG"])
         return False
 
     def complete_list(self, text, line, begidx, endidx):
@@ -200,8 +214,14 @@ Options:
 
     @docopt_cmd
     def do_edit(self, args):
-        """Usage: edit <tp_slug> <login>"""
-        self._last_exit_status = cmd_edit(args["<tp_slug>"], args["<login>"])
+        """Usage: edit TP_SLUG LOGIN
+
+Open an interactive shell in the local copy of a student submission.
+
+Arguments:
+  TP_SLUG  corresponding TP
+  LOGIN    author of the submission"""
+        self._last_exit_status = cmd_edit(args["TP_SLUG"], args["LOGIN"])
         return False
 
     def complete_edit(self, text, line, begidx, endidx):
@@ -211,11 +231,11 @@ Options:
 
     @docopt_cmd
     def do_tag(self, args):
-        """Usage: tag <tp_slug> <date:yyyy-mm-dd> [<login>...] [--file=<logins_file>] [--name=<tag_name>]"""
-        logins = get_logins(args["--file"], args["<login>"])
+        """Usage: tag TP_SLUG YYYY-MM-DD [LOGIN...] [--file=LOGINS_FILE] [--name=TAG_NAME]"""
+        logins = get_logins(args["--file"], args["LOGIN"])
         self._last_exit_status = cmd_tag(
-            args["<tp_slug>"],
-            args["<date:yyyy-mm-dd>"],
+            args["TP_SLUG"],
+            args["YYYY-MM-DD"],
             args["--name"],
             logins)
         return False
@@ -227,11 +247,22 @@ Options:
 
     @docopt_cmd
     def do_correct(self, args):
-        """Usage: correct <tp_slug> [<login>...] [--file=<logins_file>] [-g|--get] [--no-rider]"""
-        logins = get_logins(args["--file"], args["<login>"])
-        get_rendus = args["-g"] or args["--get"]
+        """Usage: correct TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--get] [--no-rider]
+
+Launches an interactive correcting session.
+
+Arguments:
+  TP_SLUG  name of the TP being corrected
+  LOGIN    students to be corrected
+
+Options:
+  --file=LOGINS_FILE path to a login list
+  -g, --get          start by downloading the submission
+  --no-rider         don't launch the Rider IDE"""
+        logins = get_logins(args["--file"], args["LOGIN"])
+        get_rendus = args["--get"]
         self._last_exit_status = cmd_correct(
-            args["<tp_slug>"], args["--no-rider"], logins, get_rendus)
+            args["TP_SLUG"], args["--no-rider"], logins, get_rendus)
         return False
 
     def complete_correct(self, text, line, begidx, endidx):
@@ -241,11 +272,22 @@ Options:
 
     @docopt_cmd
     def do_archive(self, args):
-        """Usage: archive <tp_slug> [<login>...] [--file=<logins_file>] [--output=<output_file>] [-v|--verbose]"""
-        logins = get_logins(args["--file"], args["<login>"])
-        verbose = args["-v"] or args["--verbose"]
+        """Usage: archive TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--output=OUTPUT_FILE] [--verbose]
+
+Create an archive containing several submissions.
+
+Arguments:
+  TP_SLUG  name of the TP being archived
+  LOGIN    students whose submission is to be included in the archive
+
+Options:
+  --file=LOGINS_FILE    path to a login list
+  --output=OUTPUT_FILE  path to the archive file
+  -v, --verbose         enable additional logging"""
+        logins = get_logins(args["--file"], args["LOGIN"])
+        verbose = args["--verbose"]
         self._last_exit_status = cmd_archive(
-            args["<tp_slug>"], logins, args["--output"], verbose)
+            args["TP_SLUG"], logins, args["--output"], verbose)
         return False
 
     def complete_archive(self, text, line, begidx, endidx):
@@ -272,9 +314,9 @@ Options:
 
     @docopt_cmd
     def do_help(self, args):
-        """Usage: help [<command>]"""
-        if args["<command>"] and args["<command>"] in FUNC_DOC:
-            print(FUNC_DOC[args["<command>"]])
+        """Usage: help [COMMAND]"""
+        if args["COMMAND"] and args["COMMAND"] in FUNC_DOC:
+            print(FUNC_DOC[args["COMMAND"]])
         else:
             print("Commands:")
             for cmd in FUNC_DOC:
