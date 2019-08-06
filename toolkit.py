@@ -141,10 +141,27 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_get(self, args):
-        """Usage: get <tp_slug> [<login>...] [--file=<logins_file>]"""
-        tp_slug = args["<tp_slug>"]
-        logins = get_logins(args["--file"], args["<login>"])
-        self._last_exit_status = cmd_get(tp_slug, logins)
+        """Usage: get TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [-o|-k]
+
+Download student submissions for working on them locally.
+
+Arguments:
+  TP_SLUG  name of the concerned TP
+  LOGIN    login for witch a submission must be downloaded
+
+Options:
+  --file <LOGINS_FILE>  path to a login list
+  -o, --overwrite       if already downloaded, overwrite without asking
+  -k, --keep            if already downloaded, skip without asking
+        """
+        tp_slug = args['TP_SLUG']
+        logins = get_logins(args['--file'], args['LOGIN'])
+        overwrite_policy = None
+        if args['--keep']:
+            overwrite_policy = False
+        elif args['--overwrite']:
+            overwrite_policy = True
+        self._last_exit_status = cmd_get(tp_slug, logins, overwrite_policy)
         return False
 
     def complete_get(self, text, line, begidx, endidx):

@@ -10,14 +10,13 @@ from misc.printer import print_success, print_info, print_error, print_ask, prin
 from misc.data import Tp, Submission
 
 
-def cmd_get(tp_slug, logins):
+def cmd_get(tp_slug, logins, overwrite_policy):
     """
     Download the students repo corresponding to the given TP slug
     :param tp_slug: Slug of the TP to download
     :param logins: List of student logins
     """
     tp = Tp(tp_slug)
-    overwrite = None
     success = True
 
     # For each student
@@ -28,24 +27,18 @@ def cmd_get(tp_slug, logins):
 
         # If folder exists, delete it
         if repo.exists_locally():
-            print_error("Student project already downloaded", 1)
+            overwrite = overwrite_policy
             if overwrite is None:
+                print_error("Student project already downloaded", 1)
                 ask = print_ask("Do you want to overwrite it?", ['y', 'n', 'ya', 'na'], 1)
-                if ask == 'n':
-                    print_info("Skipping student project", 1)
-                    continue
-                if ask == 'na':
-                    overwrite = False
-                    print_info("Skipping student project", 1)
-                    continue
-                elif ask == 'ya':
-                    overwrite = True
-            elif not overwrite:
-                print_info("Skipping student project", 1)
-                continue
+                overwrite = ask in [ 'y', 'ya' ]
 
             if overwrite:
                 print_info("Overwriting student project", 1)
+            else:
+                print_info("Skipping student project", 1)
+                continue
+
             folder_remove(repo.local_dir())
 
         try:
@@ -82,7 +75,7 @@ def cmd_get(tp_slug, logins):
 
 
 CPLT = CmdCompletor(
-    [],
+    [ '-o', '--overwrite', '-k', '--keep' ],
     { '--files=': enum_files },
     [ enum_tp_slugs, enum_logins ])
 

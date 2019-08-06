@@ -22,7 +22,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
     if tag_name is None:
         tag_name = SUBMISSION_TAG
 
-    cmd_get(tp_slug, logins)
+    cmd_get(tp_slug, logins, False)
 
     for i, login in enumerate(logins):
         print_info(login + ":", percent_pos=i, percent_max=len(logins))

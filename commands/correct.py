@@ -177,7 +177,7 @@ def cmd_correct(tp_slug, no_rider, logins, get_rendus):
     :param get_rendus: Should we call get before correct?
     """
     if get_rendus:
-        cmd_get(tp_slug, logins)
+        cmd_get(tp_slug, logins, None)
 
     if not folder_exists(MOULINETTE_FOLDER):
         folder_create(MOULINETTE_FOLDER)
