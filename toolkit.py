@@ -65,7 +65,7 @@ def docopt_cmd(func):
             else:
                 print_error(e)
             self._last_exit_status = EXIT_UNEXPECTED
-            return True
+            return False
 
     fn.__name__ = func.__name__
     fn.__doc__ = func.__doc__

@@ -85,6 +85,10 @@ def folder_find(folder_path, includes=None, excludes=None, list_dir=False, depth
     return folders
 
 
+def parent_dir(path):
+    return os.path.normpath(os.path.join(path, os.path.pardir))
+
+
 def files_remove(files_paths):
     for file_path in files_paths:
         os.unlink(file_path)

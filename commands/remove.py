@@ -17,11 +17,11 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
     """
     success = True
     tp = Tp(tp_slug)
-    if not os.path.exists(tp.local_dir()):
+    if not tp.has_local_submissions():
         print_error("TP " + tp_slug + " not found")
     else:
         if remove_all or len(logins) is 0:
-            folder_remove(tp.local_dir())
+            tp.remove_locally()
             print_success("Successfully removed " + tp_slug)
         else:
             for i, login in enumerate(logins):
@@ -33,7 +33,7 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
                     percent_pos=i, percent_max=len(logins), end='')
                 if repo.exists_locally():
                     try:
-                        folder_remove(repo.local_dir())
+                        repo.remove_locally()
                         print_success('')
                     except IOError:
                         print_error('')
@@ -42,8 +42,8 @@ def cmd_remove(tp_slug, logins, remove_all, remove_moulinette):
                 else:
                     print_error('')
 
-    if remove_moulinette and tp.moulinette_exists_locally():
-        folder_remove(tp.local_moulinette_dir())
+    if remove_moulinette:
+        tp.remove_moulinette_locally()
 
     return EXIT_SUCCESS if success else EXIT_FAILURE
 

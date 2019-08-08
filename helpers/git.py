@@ -1,6 +1,8 @@
 import os
+import shutil
 
 from helpers.command import run_command
+from helpers.io import parent_dir
 from misc.exceptions import GitException
 
 
@@ -25,9 +27,28 @@ def git_checkout_tag(tag):
         raise GitException("Cannot checkout " + tag)
 
 
-def git_clone(repo):
-    if run_command('git clone ' + repo).returncode is not 0:
-        raise GitException("Cannot clone " + repo)
+def git_clone(repo, dest):
+    if os.path.exists(dest):
+        raise IOError('Cannot clone, path already exists.')
+
+    # If required, creating parent directory
+    containing_dir=parent_dir(dest)
+    existing_dir=containing_dir
+    created_dir=None
+    while not os.path.isdir(existing_dir):
+        created_dir = existing_dir
+        existing_dir = parent_dir(existing_dir)
+    if created_dir is not None:
+        os.makedirs(created_dir)
+
+    # Running git
+    try:
+        if run_command('git clone '+repo+' '+dest).returncode is not 0:
+            raise GitException("Cannot clone " + repo)
+    except Exception as e:
+        if created_dir is not None:
+            shutil.rmtree(created_dir)
+        raise
 
 
 def git_tag(name):

@@ -1,10 +1,25 @@
 import os
 import re
+import shutil
 
 from misc.printer import print_warning
-from misc.config import MOULINETTE_FOLDER, STUDENTS_FOLDER, REPO_FOLDER, REPO_URL
+from misc.config import STUDENTS_FOLDER, REPO_FOLDER, REPO_URL
 from helpers.other import format_to_regex
 from helpers.io import folder_ls
+from misc.moulinettes import Moulinette
+
+
+def to_tmp_path(path):
+    new_path = os.path.normpath(path)+'.tmp'
+
+    suffix=''
+    nonce = 1
+    while os.path.exists(new_path+suffix):
+        suffix = '.'+str(nonce)
+        nonce += 1
+    new_path += suffix
+
+    return new_path
 
 
 class Tp:
@@ -16,28 +31,30 @@ class Tp:
         return self._slug
 
 
-    def local_dir(self):
+    def _local_dir(self):
         return os.path.join(STUDENTS_FOLDER, self.slug())
 
 
-    def local_moulinette_dir(self):
-        return os.path.join(MOULINETTE_FOLDER, self.slug())
+    def has_local_submissions(self):
+        """ Similar to len(tp.get_local_submissions()) == 0 """
+        local_dir = self._local_dir()
+        return os.path.isdir(local_dir) and len(os.listdir(local_dir)) != 0
 
 
-    def exists_locally(self):
-        return os.path.exists(self.local_dir())
+    def get_moulinette(self, dl_policy):
+        return Moulinette.get_for_tp(self, dl_policy)
 
 
-    def moulinette_exists_locally(self):
-        return os.path.exists(self.local_moulinette_dir())
+    def remove_moulinette_locally(self):
+        return Moulinette.remove_locally_for_tp(self)
 
 
     def get_local_submissions(self):
         submissions = []
-        if os.path.exists(self.local_dir()):
+        if os.path.exists(self._local_dir()):
             regex = '^' + format_to_regex(
                 REPO_FOLDER, tp_slug=re.escape(self.slug()), login='.*') + '$'
-            for entry in os.listdir(self.local_dir()):
+            for entry in os.listdir(self._local_dir()):
                 match = re.search(regex, entry)
                 if match is None or len(match.group('login')) == 0:
                     print_warning(
@@ -48,10 +65,20 @@ class Tp:
         return submissions
 
 
+    def remove_locally(self):
+        local_dir = self._local_dir()
+        if os.path.isdir(local_dir):
+            shutil.rmtree(local_dir)
+            return True
+        else:
+            return False
+
+
     def get_local_tps():
         if os.path.isdir(STUDENTS_FOLDER):
-            return [ Tp(entry) for entry in folder_ls(STUDENTS_FOLDER)
-                     if 'tp' in entry ]
+            tps = [ Tp(entry) for entry in os.listdir(STUDENTS_FOLDER) ]
+            tps.sort(key=Tp.slug)
+            return tps
         else:
             return []
 
@@ -79,9 +106,13 @@ class Submission:
         return self._login
 
 
+    def name(self):
+        return self.tp().slug()+'/'+self.login()
+
+
     def local_dir(self):
         return os.path.join(
-            self.tp().local_dir(),
+            self.tp()._local_dir(),
             REPO_FOLDER.format(tp_slug=self.tp().slug(), login=self.login()))
 
 
@@ -91,3 +122,13 @@ class Submission:
 
     def url(self):
         return REPO_URL.format(login=self.login(), tp_slug=self.tp().slug())
+
+
+    def remove_locally(self):
+        if self.exists_locally():
+            shutil.rmtree(self.local_dir())
+            if not self.tp().has_local_submissions():
+                self.tp().remove_locally()
+            return True
+        else:
+            return False

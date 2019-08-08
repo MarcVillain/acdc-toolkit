@@ -51,7 +51,7 @@ def enum_logins_for_tp(text, line):
     for arg in line.replace('=', ' ').split(' ')[1:]:
         if len(arg) != 0 and arg[0] != '-':
             tp = Tp(arg)
-            if tp.exists_locally():
+            if tp.has_local_submissions():
                 logins += [ sub.login()+' '
                             for sub in tp.get_local_submissions() ]
     return filter_proposals(logins, text)

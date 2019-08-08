@@ -19,11 +19,12 @@ from getkey import platform, keys
 from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_logins_for_tp
 from helpers.command import exec_in_folder
 from helpers.git import git_clone
-from helpers.io import folder_ls, folder_find, folder_exists, folder_create
+from helpers.io import folder_ls, folder_find, folder_exists, folder_create, parent_dir
 from helpers.terminal import open_rider
-from misc.config import MOULINETTE_REPO, STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS
+from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS
 from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
 from misc.data import Tp, Submission
+from misc.moulinettes import DownloadPolicy
 
 
 actions = [
@@ -40,12 +41,6 @@ actions = [
     Readme(),
     Exit(),
 ]
-
-
-def download_moulinette(tp_slug):
-    print_info("Downloading moulinette")
-    git_clone(MOULINETTE_REPO.format(tp_slug=tp_slug))
-    print_success("Download successful")
 
 
 def __parse_tests(xml, out):
@@ -113,23 +108,15 @@ def run_actions(key, login_index, logins, logins_paths,
     return login_index, project_index
 
 
-def run_moulinette(no_rider, logins, tp_slug):
-    csproj_paths = [path
-                    for path in
-                    folder_find(os.path.join(MOULINETTE_FOLDER, tp_slug),
-                                includes=[".*\\.csproj"],
-                                excludes=["\\..*", ".*Tests.*", ".*Correction.*"], depth=3)
-                    if path.endswith(".csproj")]
-
-    projects_paths = sorted(list({os.path.dirname(path) for path in csproj_paths}))
+def run_moulinette(moulinette, no_rider, logins):
+    projects_paths = moulinette.get_project_dirs()
     solutions_paths = list({os.path.dirname(path) for path in projects_paths})
 
     solutions = [os.path.basename(path) for path in solutions_paths]
     projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
                 for path in projects_paths]
 
-    logins_paths = [os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login))
-                    for login in logins]
+    logins_paths = [ sub.local_dir() for sub in moulinette.tp().get_local_submissions() ]
 
     run_platform = platform(interrupts={})
 
@@ -179,19 +166,10 @@ def cmd_correct(tp_slug, no_rider, logins, get_rendus):
     if get_rendus:
         cmd_get(tp_slug, logins, None)
 
-    if not folder_exists(MOULINETTE_FOLDER):
-        folder_create(MOULINETTE_FOLDER)
+    tp = Tp(tp_slug)
+    moulinette = tp.get_moulinette(DownloadPolicy.IF_REQUIRED)
 
-    tp_folder = os.path.join(MOULINETTE_FOLDER, tp_slug)
-
-    if not folder_exists(tp_folder):
-        exec_in_folder(MOULINETTE_FOLDER,
-                       download_moulinette,
-                       tp_slug)
-
-    exec_in_folder(tp_folder,
-                   run_moulinette,
-                   no_rider, logins, tp_slug)
+    run_moulinette(moulinette, no_rider, logins)
 
     return EXIT_SUCCESS
 
