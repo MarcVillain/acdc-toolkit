@@ -1,7 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
+PYTHON_VERSION=3.6.9
 DATA_DIR=@_DATA_DIR_@
+PYENV_ROOT="$HOME/.pyenv"
+PATH="$PYENV_ROOT/versions/$PYTHON_VERSION/bin:$PATH:$HOME/.local/bin"
 cd "@_INSTALL_DIR_@"
+
+if ! which pyenv > /dev/null 2> /dev/null
+then
+	PATH="$PATH:$PYENV_ROOT/bin"
+fi
 
 function update_pipenv()
 {
@@ -10,16 +18,32 @@ function update_pipenv()
 
 	if [ "$INSTALLED" != $REQUIRED ]
 	then
-		pipenv sync
-		mkdir -p "$DATA_DIR"
-	    echo $REQUIRED > "$DATA_DIR/.installed"
+		if ! which pipenv > /dev/null 2> /dev/null
+		then
+			pip3 install --user pipenv
+		fi
+
+		if ! which pyenv > /dev/null 2> /dev/null
+		then
+			echo -n 'Pyenv could not be found. Install it [Y/n]? '
+			read ANSWER
+			if [[ "$ANSWER" =~ ^([Yy][eEsS]*)?$ ]]
+			then
+				curl 'https://pyenv.run' | bash
+			fi
+		fi
+
+		pyenv install --skip-existing $PYTHON_VERSION
+		pipenv sync &&
+		mkdir -p "$DATA_DIR" &&
+		echo $REQUIRED > "$DATA_DIR/.installed"
 	fi
 }
 
 if [ $# -eq 1 ] && [ "$1" = 'clean' ]
 then
 	pipenv --rm
-	rm -r "$DATA_DIR/"
+	rm -rf "$DATA_DIR/"
 else
 	update_pipenv
 	pipenv run ./toolkit.py "$@"

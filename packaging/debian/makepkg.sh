@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
-PROJECT_DIR="$(readlink -f "$(dirname "$0")/../..")"
-SCRIPT_DIR="$PROJECT_DIR/packaging/dpkg"
+SCRIPT_DIR="$(readlink -f "$(dirname "$0")")"
+PROJECT_DIR="$(readlink -f "$SCRIPT_DIR/../..")"
 source "$PROJECT_DIR/packaging/config"
 BUILD_DIR="$(mktemp -d)"
-trap "{ rm -r '$BUILD_DIR'; }" EXIT
+trap "{ rm -rf '$BUILD_DIR'; }" EXIT
 
 # installing into a temp directory
 
