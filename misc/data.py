@@ -27,6 +27,10 @@ class Tp:
         self._slug = slug
 
 
+    def __eq__(self, other):
+        return isinstance(other, Tp) and self.slug() == other.slug()
+
+
     def slug(self):
         return self._slug
 
@@ -96,6 +100,13 @@ class Submission:
         else:
             self._tp = Tp(tp)
         self._login = login
+
+
+    def __eq__(self, other):
+        return \
+            isinstance(other, Submission) \
+            and self.tp() == other.tp() \
+            and self.login() == other.login()
 
 
     def tp(self):

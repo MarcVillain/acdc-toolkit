@@ -1,4 +1,7 @@
 import os
+import cmd
+import shlex
+import readline
 from xml.etree import cElementTree
 
 from commands.correct_actions.all_public import AllPublic
@@ -16,31 +19,97 @@ from commands.correct_actions.tree import Tree
 from commands.get import cmd_get
 from getkey import platform, keys
 
-from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_logins_for_tp
-from helpers.command import exec_in_folder
+from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_logins, enum_logins_for_tp
+from helpers.command import exec_in_folder, run_shell_command
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create, parent_dir
-from helpers.terminal import open_rider
-from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS
-from misc.printer import print_info, print_success, print_press_enter, print_warning, print_error
+from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS, HISTORY_FILE, CORRECTION_HISTORY_FILE
+from misc.printer import print_info, print_error, print_success, print_current_exception
 from misc.data import Tp, Submission
 from misc.moulinettes import DownloadPolicy
+from helpers.autocomplete import CmdCompletor, filter_proposals, enum_logins_for_tp
 
 
-actions = [
-    Previous(),
-    Next(),
-    Refresh(),
-    Build(),
-    Shell(),
-    ClearFiles(),
-    CopyFiles(),
-    AllPublic(),
-    Log(),
-    Tree(),
-    Readme(),
-    Exit(),
-]
+class _BadUsageException(Exception):
+    pass
+
+
+class CorrectingSessionSet:
+    def __init__(self, moulinette):
+        self.__moulinette = moulinette
+        self.__sessions = []
+        self.__current_index = 0
+
+
+    def current(self):
+        if len(self.__sessions) == 0:
+            return None
+        else:
+            return self.__sessions[self.__current_index]
+
+
+    def select(self, sel):
+        """@sel can be either a login or an offset"""
+        if isinstance(sel, int):
+            self.__current_index = \
+                (self.__current_index + sel) % len(self.__sessions)
+        else:
+            tries = 0
+            while tries < len(self.__sessions) \
+                  and self.current().submission().login() != sel:
+                tries += 1
+                self.select(+1)
+
+
+    def restore_current(self):
+        submission = self.current().submission()
+        self.current().remove()
+        self.__sessions[self.__current_index] = \
+            self.__moulinette.new_correcting_session(submission)
+
+
+    def close_current(self):
+        self.__sessions.pop(self.__current_index)
+        if self.__current_index >= len(self.__sessions):
+            self.__current_index = 0
+
+
+    def open(self, login, assert_not_open=False):
+        submission = Submission(self.__moulinette.tp(), login)
+        if not assert_not_open:
+            for session in self.__sessions:
+                if session.submission() == submission:
+                    return
+        session = self.__moulinette.new_correcting_session(submission)
+        self.__sessions.append(session)
+
+
+    def close(self, login):
+        submission = Submission(self.__moulinette.tp(), login)
+        if self.current().submission() == submission:
+            return self.close_current()
+        index = None
+        for i in range(len(self.__sessions)):
+            if self.__sessions[i].submission() == submission:
+                index = i
+                break
+        if index is not None:
+            assert index != self.__current_index
+            if index < self.__current_index:
+                self.__current_index -= 1
+
+
+    def print_summary(self):
+        print_info('{0} correcting session(s) opened for TP "{1}"'.format(
+            len(self.__sessions),
+            self.__moulinette.tp().slug()))
+        for session in self.__sessions:
+            print_info(session.submission().login(), end=': ')
+            session.problems().print_one_liner()
+
+
+    def get_logins(self):
+        return [ session.submission().login() for session in self.__sessions ]
 
 
 def __parse_tests(xml, out):
@@ -73,103 +142,295 @@ def parse_tests(path):
     return out
 
 
-def create_actions_info_message():
-    def boldify(message):
-        elts = message.split(":")
-        return "\033[1m" + elts[0] + "\033[21m:" + elts[1]
+def _cmd(f):
+    def decorated_f(self, args):
+        try:
+            return f(self, shlex.split(args))
+        except _BadUsageException:
+            print_error('Bad usage of command.')
+            print(decorated_f.__doc__)
+        except Exception:
+            print_current_exception()
+            return False
 
-    return ', '.join(boldify(str(action))
-                     for action in actions
-                     if str(action))
-
-
-def run_actions(key, login_index, logins, logins_paths,
-                project_index, projects, projects_paths):
-    student_folder_exists = folder_exists(logins_paths[login_index])
-    for action in actions:
-        if action.should_run(key) \
-                and (student_folder_exists or not action.requires_student_folder()):
-            res = action.run(logins[login_index], logins_paths[login_index],
-                             projects[project_index], projects_paths[project_index])
-            if res is not None:
-                project_index += res
-                while project_index >= len(projects):
-                    project_index -= len(projects)
-                    login_index += 1
-                while project_index < 0:
-                    project_index += len(projects)
-                    login_index -= 1
-                login_index %= len(logins)
-                # Add space in display when looping back on logins
-                if login_index == 0 and project_index == 0:
-                    print("\n")
-        student_folder_exists = folder_exists(logins_paths[login_index])
-
-    return login_index, project_index
+    decorated_f.__name__ = f.__name__
+    decorated_f.__doc__ = f.__doc__
+    decorated_f.__dict__.update(f.__dict__)
+    return decorated_f
 
 
-def run_moulinette(moulinette, no_rider, logins):
-    projects_paths = moulinette.get_project_dirs()
-    solutions_paths = list({os.path.dirname(path) for path in projects_paths})
+class CommandDispatcher(cmd.Cmd):
+    CPLT_OPEN = CmdCompletor(
+        [],
+        {},
+        [ enum_logins ])
 
-    solutions = [os.path.basename(path) for path in solutions_paths]
-    projects = [os.path.join(os.path.basename(os.path.dirname(path)), os.path.basename(path))
-                for path in projects_paths]
 
-    logins_paths = [ sub.local_dir() for sub in moulinette.tp().get_local_submissions() ]
+    def __init__(self, sessions):
+        self.__sessions = sessions
+        super().__init__()
 
-    run_platform = platform(interrupts={})
 
-    login_index, project_index = run_actions(None, 0, logins, logins_paths, 0, projects, projects_paths)
+    def __update_prompt(self):
+        submission = self.__sessions.current().submission()
+        self.prompt = 'ACDC Correcting {0}/{1} $ '.format(
+            submission.tp().slug(), submission.login())
 
-    actions_info_message = create_actions_info_message()
 
-    if not no_rider:
-        if len(solutions_paths) > 1:
-            print_info("Opening rider windows")
-            print_warning("Click on 'New Window'")
+    def __get_enum_logins_func(self):
+        def f(text, line):
+            logins = [
+                session.submission().login()
+                for session in self.__sessions ]
+            return filter_proposals(logins, text)
+        return f
+
+
+    def preloop(self):
+        super().preloop()
+        readline.write_history_file(HISTORY_FILE)
+        try:
+            readline.read_history_file(CORRECTION_HISTORY_FILE)
+        except Exception:
+            pass
+        self.__update_prompt()
+
+
+    def postcmd(self, stop, line):
+        if self.__sessions.current() is not None:
+            self.__update_prompt()
+        return super().postcmd(stop, line)
+
+
+    def postloop(self):
+        super().postloop()
+        readline.write_history_file(CORRECTION_HISTORY_FILE)
+        try:
+            readline.read_history_file(HISTORY_FILE)
+        except Exception:
+            pass
+
+
+    @_cmd
+    def do_next(self, args):
+        """Usage: next
+
+Select the next submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.select(+1)
+        return False
+
+
+    @_cmd
+    def do_prev(self, args):
+        """Usage: next
+
+Select the previous submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.select(-1)
+        return False
+
+
+    @_cmd
+    def do_select(self, args):
+        """Usage: select LOGIN
+
+Switch to an already opened submission."""
+        if len(args) != 1:
+            raise _BadUsageException()
+        self.__sessions.select(args[0])
+        return False
+
+
+    @_cmd
+    def do_open(self, args):
+        """Usage: open LOGIN...
+
+Open a session for each LOGIN."""
+        if len(args) == 0:
+            raise _BadUsageException()
+        for login in args:
+            self.__sessions.open(login)
+        if len(args) == 1:
+            return self.do_select(login)
+        return False
+
+
+    def complete_open(self, text, line, begidx, endidx):
+        return CommandDispatcher.CPLT_OPEN.complete(text, line, begidx, endidx)
+
+
+    @_cmd
+    def do_close(self, args):
+        """Usage: close LOGIN...
+
+Close each specified session."""
+        if len(args) == 0:
+            self.__sessions.close_current()
         else:
-            print_info("Opening rider window")
-
-        for solution_path in solutions_paths:
-            open_rider(solution_path)
-
-        if len(solutions_paths) > 1:
-            print_press_enter("when the windows are opened")
-        else:
-            print_press_enter("when the window is opened")
-
-    while True:
-        msg = "Student " + logins[login_index] + " (" + projects[project_index] + ")"
-        if not folder_exists(logins_paths[login_index]):
-            print_error(msg + " not found")
-        else:
-            print_success(msg + " loaded")
-        print_warning(actions_info_message)
-
-        key = run_platform.getkey()
-        if key == keys.CTRL_D:
-            break
-
-        login_index, project_index = run_actions(key, login_index, logins, logins_paths,
-                                                 project_index, projects, projects_paths)
+            for login in args:
+                self.__sessions.close(login)
+        if self.__sessions.current() is None:
+            print('The last session has been closed.')
+            return True
+        return False
 
 
-def cmd_correct(tp_slug, no_rider, logins, get_rendus):
+    def complete_close(self, text, line, begidx, endidx):
+        cplt = CmdCompletor(
+            [],
+            {},
+            [ lambda text, line: self.__sessions.get_logins() ])
+        return cplt.complete(text, line, begidx, endidx)
+
+
+    @_cmd
+    def do_editor(self, args):
+        """Usage: editor
+
+Open the current submission into an IDE or editor."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.current().open_editor()
+        return False
+
+
+    @_cmd
+    def do_shell(self, args):
+        """Usage: shell
+
+Open an interactive shell in the directory of the current correcting session.
+You can make any change you want in this directory and restore the original
+version at any time."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.current().open_shell()
+        return False
+
+
+    @_cmd
+    def do_restore(self, args):
+        """Usage: restore
+
+Restore the current correcting session to its original state.
+Any change will be lost."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.restore_current()
+        return False
+
+
+    @_cmd
+    def do_status(self, args):
+        """Usage: status
+
+Print various informations about the current submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        print('Basic checks:')
+        self.__sessions.current().problems().print_all(1)
+        return False
+
+
+    @_cmd
+    def do_summary(self, args):
+        """Usage: summary
+
+Print a summary of the status of all opened submissions."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.print_summary()
+        return False
+
+
+    @_cmd
+    def do_readme(self, args):
+        """Usage: readme
+
+Prints the content of README for the current submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        print(self.__sessions.current().readme())
+        return False
+
+
+    @_cmd
+    def do_authors(self, args):
+        """Usage: authors
+
+Prints the content of AUTHORS for the current submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        print(self.__sessions.current().authors())
+        return False
+
+
+    @_cmd
+    def do_tree(self, args):
+        """Usage: tree
+
+Prints the file tree for the current submission."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        root = self.__sessions.current().submission().local_dir()
+        run_shell_command('tree -aCI ".git|.gitignore" '+root+' | less -R')
+        return False
+
+
+    @_cmd
+    def do_exit(self, args):
+        """Usage: exit
+
+Close the correcting session.
+WARNING: Any modification made to the correction trees will be lost."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        return True
+
+
+    def default(self, cmd):
+        if cmd == 'EOF':
+            print('exit')
+            return True
+        print_error(str(cmd).split(' ')[0] + ': no such command')
+        return False
+
+
+def cmd_correct(tp_slug, logins, get_rendus):
     """
     Start the correction tool
     :param tp_slug: Slug of the TP to correct
-    :param no_rider: Should we open rider or not
     :param logins: List of student logins
     :param get_rendus: Should we call get before correct?
     """
     if get_rendus:
         cmd_get(tp_slug, logins, None)
 
+    logins = list({ login for login in logins })
+
     tp = Tp(tp_slug)
     moulinette = tp.get_moulinette(DownloadPolicy.IF_REQUIRED)
+    sessions = CorrectingSessionSet(moulinette)
 
-    run_moulinette(moulinette, no_rider, logins)
+    for i, login in enumerate(logins):
+        try:
+            print_info(
+                'Processing submission of {0}...'.format(login),
+                percent_pos=i,
+                percent_max=len(logins),
+                end=' ')
+            sessions.open(login)
+            print_success('Done.')
+        except Exception:
+            print_current_exception()
+
+    print_info('Done.')
+
+    if sessions.current() is not None:
+        dispatcher = CommandDispatcher(sessions)
+        dispatcher.cmdloop()
 
     return EXIT_SUCCESS
 

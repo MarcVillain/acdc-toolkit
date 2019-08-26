@@ -257,12 +257,11 @@ Arguments:
 
 Options:
   --file=LOGINS_FILE path to a login list
-  -g, --get          start by downloading the submission
-  --no-rider         don't launch the Rider IDE"""
+  -g, --get          start by downloading the submission"""
         logins = get_logins(args["--file"], args["LOGIN"])
         get_rendus = args["--get"]
         self._last_exit_status = cmd_correct(
-            args["TP_SLUG"], args["--no-rider"], logins, get_rendus)
+            args["TP_SLUG"], logins, get_rendus)
         return False
 
     def complete_correct(self, text, line, begidx, endidx):

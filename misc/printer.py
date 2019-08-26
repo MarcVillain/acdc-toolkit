@@ -1,4 +1,7 @@
 import readline
+import sys
+if __debug__:
+    import traceback
 
 
 def print_colored_icon(color, icon, msg, indent=0, end='\n'):
@@ -24,6 +27,14 @@ def print_warning(msg, indent=0, end='\n'):
 def print_debug(msg, indent=0, end='\n'):
     if __debug__:
         print_colored_icon("\033[37m", "⚐", msg, indent=indent, end=end)
+
+
+def print_current_exception():
+    if __debug__:
+        print_error('An exception occured:')
+        traceback.print_exc()
+    else:
+        print_error(sys.exc_info()[1])
 
 
 def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):

@@ -8,11 +8,13 @@ ACDC_LOCAL_FOLDER = os.path.expanduser('@_DATA_DIR_@')
 
 MOULINETTE_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "moulinettes")
 STUDENTS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "students")
+CORRECTIONS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "corrections")
 
 DEFAULT_LOGINS_FILE = os.path.join(ACDC_LOCAL_FOLDER, "logins.txt")
 
 HISTORY_FILE = os.path.join(ACDC_LOCAL_FOLDER, ".toolkit_history")
 HISTORY_SIZE = 1000
+CORRECTION_HISTORY_FILE = os.path.join(ACDC_LOCAL_FOLDER, ".correction_history")
 
 REPO_FOLDER = "{tp_slug}-{login}"
 REPO_URL = "git@git.cri.epita.fr:p/" + str(SUP_YEAR) + "-sup-tp/" + REPO_FOLDER
