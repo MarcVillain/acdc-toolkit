@@ -2,22 +2,28 @@ import sys
 import os
 import shutil
 import re
-from enum import Enum, auto
+import json
+import enum
 from abc import ABC, abstractmethod
 from xml.etree import cElementTree
 
-from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER
+from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_REPO, CAMLTRACER_RELEASE_TAG, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE
 from helpers.git import git_clone
 from helpers.io import folder_find, folder_ls, parent_dir
-from helpers.command import run_command_detached, run_command
+from helpers.command import run_command_detached, run_command, exec_in_folder
 from helpers.terminal import open_subshell
 from misc.printer import print_success, print_warning, print_error
 
 
-class DownloadPolicy(Enum):
-    NEVER = auto()
-    IF_REQUIRED = auto()
-    ALWAYS = auto()
+class Language(enum.Enum):
+    C_SHARP = enum.auto()
+    OCAML = enum.auto()
+
+
+class DownloadPolicy(enum.Enum):
+    NEVER = enum.auto()
+    IF_REQUIRED = enum.auto()
+    ALWAYS = enum.auto()
 
 
 class ResourceNotFoundException(Exception):
@@ -30,7 +36,7 @@ class Moulinette(ABC):
     Objects of this class should not be directly instanciated. Use
     the Tp class for this purpose.
     """
-    def __init__(self, tp):
+    def __init__(self, tp, dl_policy):
         self._tp = tp
 
 
@@ -43,64 +49,24 @@ class Moulinette(ABC):
         pass
 
 
+    def remove_locally(self):
+        pass
+
+
     def get_for_tp(tp, dl_policy):
-        local_dir = Moulinette.__local_dir_for_tp(tp)
-        overwriting = False
-        if os.path.exists(local_dir):
-            if dl_policy is DownloadPolicy.ALWAYS:
-                overwriting = True
-            else:
-                return Moulinette.__get_local_for_tp(tp)
-        elif dl_policy is DownloadPolicy.NEVER:
-            raise ResourceNotFoundException('Moulinette not available locally.')
-
-        # Downloading
-        dl_path = to_tmp_path(local_dir) if overwriting else local_dir
-        try:
-            git_clone(Moulinette.__url_for_tp(tp), dl_path)
-        except Exception as e:
-            if overwriting:
-                shutil.rmtree(dl_path)
-            raise
-        if overwriting:
-            shutil.rmtree(local_dir)
-            os.rename(dl_path, local_dir)
-
-        return Moulinette.__get_local_for_tp(tp)
+        if tp.language() == Language.OCAML:
+            return _CamlMoulinette(tp, dl_policy)
+        elif tp.language() == Language.C_SHARP:
+            return _CsMoulinette(tp, dl_policy)
+        raise
 
 
     def remove_locally_for_tp(tp):
-        local_dir = Moulinette.__local_dir_for_tp(tp)
-        if os.path.isdir(local_dir):
-            shutil.rmtree(local_dir)
-            return True
-        else:
-            return False
-
-
-    def _local_dir(self):
-        return Moulinette.__local_dir_for_tp(self.tp())
-
-
-    def __local_dir_for_tp(tp):
-        return os.path.join(MOULINETTE_FOLDER, tp.slug())
-
-
-    def __url_for_tp(tp):
-        return MOULINETTE_REPO.format(tp_slug=tp.slug())
-
-
-    def __get_local_for_tp(tp):
-        return _CsMoulinette(tp)
-
-
-class _CsMoulinette(Moulinette):
-    def __init__(self, tp):
-        super().__init__(tp)
-
-
-    def new_correcting_session(self, submission):
-        return _CsCorrectingSession(submission)
+        try:
+            moulinette = Moulinette.get_for_tp(tp, DownloadPolicy.NEVER)
+            moulinette.remove_locally()
+        except ResourceNotFoundException:
+            pass
 
 
 def _find_file(submission, problems, name, name_re):
@@ -240,32 +206,55 @@ def _read_authors(submission, problems):
     return content
 
 
-class _CsCorrectingSession:
+class _CorrectingSession(ABC):
     # Private attributes:
     #   * __submission: Submission
     #   * __moulinette: Moulinette
     #   * __dir: str
-    #   * __project_dirs
     #   * __problems: ProblemLog
     #   * __reamde: str
     #   * __authors: str
     def __init__(self, submission):
         self.__submission = submission
         self.__moulinette = \
-            self.__submission.tp().get_moulinette(DownloadPolicy.NEVER)
+            self.submission().tp().get_moulinette(DownloadPolicy.NEVER)
 
         self.__problems = ProblemLog()
 
-        self.__readme = _read_readme(self.__submission, self.__problems)
-        self.__authors = _read_authors(self.__submission, self.__problems)
+        self.__readme = _read_readme(self.submission(), self.problems())
+        self.__authors = _read_authors(self.submission(), self.problems())
 
         self.__dir = os.path.join(
             CORRECTIONS_FOLDER,
-            self.__submission.tp().slug()+'-'+self.__submission.login())
+            self.submission().tp().slug()+'-'+self.submission().login())
         if os.path.isdir(self.__dir):
-            self.__load_session()
+            saved = cElementTree.parse(self.__session_file()).getroot()
+            self._load_session(saved)
         else:
-            self.__init_session()
+            try:
+                self._init_session()
+            except:
+                if os.path.isdir(self.dir()):
+                    shutil.rmtree(self.dir())
+                raise
+            self.save()
+
+
+    def __session_file(self):
+        return os.path.join(self.__dir, '.session')
+
+
+    def save(self):
+        save = cElementTree.TreeBuilder()
+        save.start('correcting-session')
+        self._save_session(save)
+        xml_str = cElementTree.tostring(save.end('correcting-session'))
+        with open(self.__session_file(), 'bw+') as session_file:
+            session_file.write(xml_str)
+
+
+    def moulinette(self):
+        return self.__moulinette
 
 
     def remove(self):
@@ -297,23 +286,108 @@ class _CsCorrectingSession:
         return self.__problems
 
 
+    @abstractmethod
     def open_editor(self):
-        for sln in folder_find(self.__dir, includes=['.*\\.sln']):
-            run_command_detached('rider '+sln)
+        pass
 
 
     def open_shell(self):
         open_subshell(self.__dir)
 
 
+    def _load_session(self, saved):
+        self.__readme = saved.find('readme').text
+        if self.__readme is None:
+            self.__readme = ''
+        self.__authors = saved.find('authors').text
+        if self.__authors is None:
+            self.__authors = ''
+        self.__problems = ProblemLog.read_from_tree(saved.find('problems'))
+
+
+    def _save_session(self, save):
+        save.start('readme')
+        save.data(self.__readme)
+        save.end('readme')
+        save.start('authors')
+        save.data(self.__authors)
+        save.end('authors')
+        save.start('problems')
+        self.problems().write_to_tree_builder(save)
+        save.end('problems')
+
+
+    def _init_session(self):
+        pass
+
+
+class _CsMoulinette(Moulinette):
+    def __init__(self, tp, dl_policy):
+        super().__init__(tp, dl_policy)
+
+        self.__local_dir = os.path.join(MOULINETTE_FOLDER, tp.slug())
+        overwriting = False
+
+        if os.path.exists(self.__local_dir):
+            if dl_policy is DownloadPolicy.ALWAYS:
+                overwriting = True
+            else:
+                return
+        elif dl_policy is DownloadPolicy.NEVER:
+            raise ResourceNotFoundException('Moulinette not available locally.')
+
+        # Downloading
+        if overwriting:
+            dl_path = to_tmp_path(self.__local_dir)
+        else:
+            dl_path = self.__local_dir
+        try:
+            url = MOULINETTE_REPO.format(tp_slug=tp.slug())
+            git_clone(url, dl_path)
+        except Exception as e:
+            if overwriting:
+                shutil.rmtree(dl_path)
+            raise
+        if overwriting:
+            shutil.rmtree(self.__local_dir)
+            os.rename(dl_path, self.__local_dir)
+
+
+    def _local_dir(self):
+        return self.__local_dir
+
+
+    def remove_locally(self):
+        if os.path.isdir(self.__local_dir):
+            shutil.rmtree(self.__local_dir)
+            return True
+        else:
+            return False
+
+
+    def new_correcting_session(self, submission):
+        return _CsCorrectingSession(submission)
+
+
+class _CsCorrectingSession(_CorrectingSession):
+    # Private attributes:
+    #   * __project_dirs
+
+
+    def open_editor(self):
+        super().open_editor()
+        for sln in folder_find(self.dir(), includes=['.*\\.sln']):
+            run_command_detached('rider '+sln)
+
+
     def __build(self, project_dir, pb_item):
         csproj_files = folder_find(project_dir, includes=['.*\\.csproj'])
         if len(csproj_files) != 1:
-            self.__problems.add(pb_item, 'wrong .csproj count')
+            self.problems().add(pb_item, 'wrong .csproj count')
         else:
             res = run_command('msbuild \'{}\''.format(csproj_files[0]))
             if res.returncode != 0:
-                self.__problems.add(pb_item, 'build failed')
+                self.problems().add(pb_item, 'build failed')
 
 
     def __get_project_dirs(self):
@@ -360,10 +434,10 @@ class _CsCorrectingSession:
         self.__project_dirs.append(dest_dir)
         project_name = os.path.basename(dest_dir)
         pb_item =  'Project "{0}"'.format(project_name)
-        self.__problems.add(pb_item)
-        src_dir = os.path.join(self.__submission.local_dir(), project_name)
+        self.problems().add(pb_item)
+        src_dir = os.path.join(self.submission().local_dir(), project_name)
         if not os.path.isdir(src_dir):
-            self.__problems.add(pb_item, 'not found')
+            self.problems().add(pb_item, 'not found')
             return
         # Copying files
         pending = [ os.path.curdir ]
@@ -385,52 +459,114 @@ class _CsCorrectingSession:
             self.__adjust_code(cs_file)
         bin_path = os.path.join(dest_dir, project_name, 'bin')
         if os.path.exists(bin_path):
-            self.__problems.add(pb_item, 'stray bin/')
+            self.problems().add(pb_item, 'stray bin/')
             shutil.rmtree(bin_path)
         obj_path = os.path.join(dest_dir, project_name, 'obj')
         if os.path.exists(obj_path):
-            self.__problems.add(pb_item, 'stray obj/')
+            self.problems().add(pb_item, 'stray obj/')
             shutil.rmtree(obj_path)
         self.__build(dest_dir, pb_item)
 
 
-    def __session_file(self):
-        return os.path.join(self.__dir, '.session')
-
-
-    def __load_session(self):
-        tree = cElementTree.parse(self.__session_file()).getroot()
-        self.__readme = tree.find('readme').text
-        self.__authors = tree.find('authors').text
+    def _load_session(self, saved):
+        super()._load_session(saved)
         self.__project_dirs = []
-        for e in tree.findall('project-dir'):
+        for e in saved.findall('project-dir'):
             self.__project_dirs.append(e.text)
-        self.__problems = ProblemLog.read_from_tree(tree.find('problems'))
 
 
-    def __init_session(self):
-        shutil.copytree(self.__moulinette._local_dir(), self.dir())
+    def _save_session(self, save):
+        super()._save_session(save)
+        for project_dir in self.__project_dirs:
+            save.start('project-dir')
+            save.data(project_dir)
+            save.end('project-dir')
+
+
+    def _init_session(self):
+        super()._init_session()
+        shutil.copytree(self.moulinette()._local_dir(), self.dir())
         shutil.rmtree(os.path.join(self.dir(), '.git'))
         self.__project_dirs = []
         for project_dir in self.__get_project_dirs():
             self.__init_project(project_dir)
 
-        # Saving state
-        xml = cElementTree.TreeBuilder()
-        xml.start('correcting-session')
-        xml.start('readme')
-        xml.data(self.__readme)
-        xml.end('readme')
-        xml.start('authors')
-        xml.data(self.__authors)
-        xml.end('authors')
-        for project_dir in self.__project_dirs:
-            xml.start('project-dir')
-            xml.data(project_dir)
-            xml.end('project-dir')
-        xml.start('problems')
-        self.problems().write_to_tree_builder(xml)
-        xml.end('problems')
-        xml_str = cElementTree.tostring(xml.end('correcting-session'))
-        with open(self.__session_file(), 'bw+') as session_file:
-            session_file.write(xml_str)
+
+class _CamlMoulinette(Moulinette):
+    def __init__(self, tp, dl_policy):
+        super().__init__(tp, dl_policy)
+        self.__dir = os.path.join(MOULINETTE_FOLDER, tp.slug())
+        if not os.path.isdir(CAMLTRACER_LOCAL_DIR):
+            _CamlMoulinette.__install_camltracer()
+        if not os.path.isdir(self.__dir):
+            git_clone(MOULINETTE_REPO.format(tp_slug=tp.slug()), self.__dir)
+
+
+    def new_correcting_session(self, submission):
+        return _CamlCorrectingSession(submission)
+
+
+    def _run_in_current_dir(self):
+        run_command('acdc-camltracer trace --json {} .'.format(
+            os.path.join(self.__dir, 'tests.py')))
+
+
+    def __install_camltracer():
+        git_clone(CAMLTRACER_REPO, CAMLTRACER_LOCAL_DIR, CAMLTRACER_RELEASE_TAG)
+        run_command('patch {} {}'.format(
+            os.path.join(CAMLTRACER_LOCAL_DIR, 'setup.py'),
+            CAMLTRACER_SETUP_PATCH_FILE))
+        run_command('pip install '+CAMLTRACER_LOCAL_DIR)
+
+
+class _CamlCorrectingSession(_CorrectingSession):
+    # Private attributes:
+    #   * __project_dirs
+
+
+    def open_editor(self):
+        super().open_editor()
+        if not 'EDITOR' in os.environ:
+            prin_error('Cannot guess editor: please export $EDITOR')
+            return
+        cmd = os.environ['EDITOR']
+        file_pattern = '.*\\.(ml|mli|caml|ocaml)'
+        for path in folder_find(self.dir(), includes=[file_pattern]):
+            cmd += ' '
+            cmd += path
+        run_command_detached(cmd)
+
+
+    def _init_session(self):
+        super()._init_session()
+        shutil.copytree(self.submission().local_dir(), self.dir())
+        shutil.rmtree(os.path.join(self.dir(), '.git'))
+        # Running CamlTracer
+        def run():
+            self.moulinette()._run_in_current_dir()
+        exec_in_folder(self.dir(), run)
+        # Parsing report
+        with open(os.path.join(self.dir(), 'report.json'), 'r') as f:
+            report = json.loads(f.read())
+        for exercise in report[0]['exoreports']:
+            pb_item = 'Exercise "{}"'.format(exercise['name'])
+            self.problems().add(pb_item)
+            if not exercise['found']:
+                self.problems().add(pb_item, 'not found')
+            else:
+                if len(exercise['errors']) != 0:
+                    self.problems().add(pb_item, 'caml error')
+                for func in exercise['funreports']:
+                    pb_item = 'Function "{}": "{}"'.format(
+                        exercise['name'],
+                        func['fun'])
+                    self.problems().add(pb_item)
+                    if not func['found']:
+                        self.problems().add(pb_item, 'not found')
+                    else:
+                        for warning in func['warnings']:
+                            self.problems().add(pb_item, warning)
+                        for test in func['cases']:
+                            if not test['passed']:
+                                self.problems().add(pb_item, 'test failed')
+                                break

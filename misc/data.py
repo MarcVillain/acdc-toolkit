@@ -6,7 +6,7 @@ from misc.printer import print_warning
 from misc.config import STUDENTS_FOLDER, REPO_FOLDER, REPO_URL
 from helpers.other import format_to_regex
 from helpers.io import folder_ls
-from misc.moulinettes import Moulinette
+from misc.moulinettes import Moulinette, Language
 
 
 def to_tmp_path(path):
@@ -33,6 +33,14 @@ class Tp:
 
     def slug(self):
         return self._slug
+
+
+    def language(self):
+        if self._slug[2:4] == 'cs':
+            return Language.C_SHARP
+        elif self._slug[2:6] == 'caml':
+            return Language.OCAML
+        raise
 
 
     def _local_dir(self):
