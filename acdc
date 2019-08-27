@@ -9,7 +9,7 @@ function update_pipenv()
 	REQUIRED="$(md5sum Pipfile.lock | sed 's/\s.*//')"
 	INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
 
-	if [ "$INSTALLED" != $REQUIRED ]
+	if [ "$INSTALLED" != "$REQUIRED" ]
 	then
 		pipenv sync
 		mkdir -p "$DATA_DIR"
