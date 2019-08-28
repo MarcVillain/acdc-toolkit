@@ -11,15 +11,9 @@ from commands.edit import cmd_edit, cplt_edit
 from helpers.other import get_logins
 from misc.config import EXIT_SUCCESS, EXIT_UNEXPECTED
 
-try:
-    import readline
-
-    readline.set_completer_delims(' ')
-except ImportError:
-    readline = None
-
 from commands.tag import cmd_tag, cplt_tag
 from misc.config import HISTORY_FILE, HISTORY_SIZE
+from helpers.readline_history import readline_history
 
 from docopt import docopt, DocoptExit
 
@@ -105,10 +99,6 @@ class CommandDispatcher(cmd.Cmd):
     def last_exit_status(self):
         return self._last_exit_status
 
-    def preloop(self):
-        if readline and os.path.exists(HISTORY_FILE):
-            readline.read_history_file(HISTORY_FILE)
-
     def cmdloop(self, intro=None):
         if intro is None:
             print(self.intro)
@@ -123,9 +113,8 @@ class CommandDispatcher(cmd.Cmd):
                 self.postloop()
 
     def postloop(self):
-        if readline:
-            readline.set_history_length(HISTORY_SIZE)
-            readline.write_history_file(HISTORY_FILE)
+        readline_history.save()
+
 
     """                   """
     """  Custom commands  """
@@ -360,4 +349,5 @@ if __name__ == '__main__':
         dispatcher.onecmd(line)
         sys.exit(dispatcher.last_exit_status())
     else:
+        readline_history.push(HISTORY_FILE, HISTORY_SIZE)
         dispatcher.cmdloop()

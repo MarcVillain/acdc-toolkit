@@ -1,7 +1,6 @@
 import os
 import cmd
 import shlex
-import readline
 from xml.etree import cElementTree
 
 from commands.correct_actions.all_public import AllPublic
@@ -23,11 +22,12 @@ from helpers.autocomplete import CmdCompletor, enum_files, enum_tp_slugs, enum_l
 from helpers.command import exec_in_folder, run_shell_command
 from helpers.git import git_clone
 from helpers.io import folder_ls, folder_find, folder_exists, folder_create, parent_dir
-from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS, HISTORY_FILE, CORRECTION_HISTORY_FILE
+from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS, HISTORY_FILE, CORRECTION_HISTORY_FILE, HISTORY_SIZE
 from misc.printer import print_info, print_error, print_success, print_current_exception
 from misc.data import Tp, Submission
 from misc.moulinettes import DownloadPolicy
 from helpers.autocomplete import CmdCompletor, filter_proposals, enum_logins_for_tp
+from helpers.readline_history import readline_history
 
 
 class _BadUsageException(Exception):
@@ -188,11 +188,6 @@ class CommandDispatcher(cmd.Cmd):
 
     def preloop(self):
         super().preloop()
-        readline.write_history_file(HISTORY_FILE)
-        try:
-            readline.read_history_file(CORRECTION_HISTORY_FILE)
-        except Exception:
-            pass
         self.__update_prompt()
 
 
@@ -204,11 +199,7 @@ class CommandDispatcher(cmd.Cmd):
 
     def postloop(self):
         super().postloop()
-        readline.write_history_file(CORRECTION_HISTORY_FILE)
-        try:
-            readline.read_history_file(HISTORY_FILE)
-        except Exception:
-            pass
+        readline_history.save()
 
 
     @_cmd
@@ -430,7 +421,11 @@ def cmd_correct(tp_slug, logins, get_rendus):
 
     if sessions.current() is not None:
         dispatcher = CommandDispatcher(sessions)
-        dispatcher.cmdloop()
+        readline_history.push(CORRECTION_HISTORY_FILE, HISTORY_SIZE)
+        try:
+            dispatcher.cmdloop()
+        finally:
+            readline_history.pop()
 
     return EXIT_SUCCESS
 
