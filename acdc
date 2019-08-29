@@ -4,12 +4,22 @@ PYTHON_VERSION=3.6.9
 DATA_DIR=@_DATA_DIR_@
 PYENV_ROOT="$HOME/.pyenv"
 PATH="$PYENV_ROOT/versions/$PYTHON_VERSION/bin:$PATH:$HOME/.local/bin"
-cd "@_INSTALL_DIR_@"
+INSTALL_DIR="@_INSTALL_DIR_@"
+
+cd "$INSTALL_DIR"
 
 if ! which pyenv > /dev/null 2> /dev/null
 then
 	PATH="$PATH:$PYENV_ROOT/bin"
 fi
+
+function confirm()
+{
+	echo -n "$1 [Y/n]? "
+	read ANSWER
+	[[ "$ANSWER" =~ ^([Yy][eEsS]*)?$ ]]
+	return $?
+}
 
 function update_pipenv()
 {
@@ -25,9 +35,7 @@ function update_pipenv()
 
 		if ! which pyenv > /dev/null 2> /dev/null
 		then
-			echo -n 'Pyenv could not be found. Install it [Y/n]? '
-			read ANSWER
-			if [[ "$ANSWER" =~ ^([Yy][eEsS]*)?$ ]]
+			if confirm 'Pyenv could not be found. Install it'
 			then
 				curl 'https://pyenv.run' | bash
 			fi
@@ -37,13 +45,44 @@ function update_pipenv()
 		pipenv sync &&
 		mkdir -p "$DATA_DIR" &&
 		echo $REQUIRED > "$DATA_DIR/.installed"
+		echo
+		echo 'Hint: You can uninstall this program from your user directory'
+		echo 'by running "'"$0"' uninstall".'
 	fi
 }
 
-if [ $# -eq 1 ] && [ "$1" = 'clean' ]
+if [ $# -eq 1 ] && [ "$1" = 'uninstall' ]
 then
+	rm -f "$DATA_DIR/.installed"
 	pipenv --rm
-	rm -rf "$DATA_DIR/"
+
+	if confirm 'Remove local data'
+	then
+		rm -rf "$DATA_DIR/"
+	fi
+
+	if [ -d "$PYENV_ROOT" ] && confirm 'Uninstall pyenv'
+	then
+		rm -rf "$PYENV_ROOT/"
+	fi
+
+	if [ "$(which pipenv 2> /dev/null)" = "$HOME/.local/bin/pipenv" ] && confirm 'Uninstall pipenv'
+	then
+	    pip3 uninstall --user pipenv
+	fi
+
+	if [ "$(stat -c '%U' .)" = "$USER" ]
+	then
+		echo 'Uninstalling...'
+		INSTALL_DIR="$(pwd)"
+		cd ..
+		rm -r "$INSTALL_DIR"
+		echo "All done."
+	else
+		echo
+		echo "Notice: Your user directory has been cleaned, but the program is"
+		echo "still installed system-wide."
+	fi
 else
 	update_pipenv
 	pipenv run ./toolkit.py "$@"
