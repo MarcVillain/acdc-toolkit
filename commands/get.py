@@ -93,7 +93,7 @@ def cmd_get(tp_slug, logins, overwrite_policy):
 
 CPLT = CmdCompletor(
     [ '-o', '--overwrite', '-k', '--keep' ],
-    { '--files=': enum_files },
+    { '--file=': enum_files },
     [ enum_tp_slugs, enum_logins ])
 
 def cplt_get(text, line, begidx, endidx):
