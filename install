@@ -28,13 +28,13 @@ else
 	if [ -z "$PREFIX" ]
 	then
 		ask_string "Choose an installation prefix" /usr
-		PREFIX="$ANSWER"
+		PREFIX="$(eval echo "$ANSWER")"
 	fi
 
 	if [ -z "$DATA_DIR" ]
 	then
 		ask_string 'Choose a directory for storing data' '~/.acdc'
-		DATA_DIR="$ANSWER"
+		DATA_DIR="$(eval echo "$ANSWER")"
 	fi
 
 	echo -n "Do you want to add an \"acdc\" command? [Y/n] "
