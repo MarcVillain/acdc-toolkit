@@ -36,11 +36,10 @@ class Tp:
 
 
     def language(self):
-        if self._slug[2:4] == 'cs':
-            return Language.C_SHARP
-        elif self._slug[2:6] == 'caml':
+        if self._slug.startswith('caml'):
             return Language.OCAML
-        raise
+        else:
+            return Language.C_SHARP
 
 
     def _local_dir(self):
