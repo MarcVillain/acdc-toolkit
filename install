@@ -70,15 +70,16 @@ fi
 mkdir -p "$INSTALL_DIR"
 cp -r ./. "$INSTALL_DIR"
 
-find "$INSTALL_DIR" -type f -exec sed -i \
-	 "s|@_INSTALL_DIR_@|$REL_INSTALL_DIR|g
-	  s|@_DATA_DIR_@|$DATA_DIR|g" {} \;
 rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
+find "$INSTALL_DIR" -type f -exec tools/substitute.sh {} \
+	 'INSTALL_DIR' "$REL_INSTALL_DIR" \
+	 'DATA_DIR' "$DATA_DIR" \;
 
 if $USE_BIN
 then
 	mkdir -p "$ROOT$PREFIX/bin/"
-	install -m 755 "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
+	cp "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
+	chmod +x "$ROOT$PREFIX/bin/acdc"
 
 	if $INTERACTIVE && ! grep -q "$ROOT$PREFIX/bin" <<<"$PATH"
 	then

@@ -20,11 +20,11 @@ INTERACTIVE=false ROOT="$BUILD_DIR/$FULL_PKG_NAME" ./install
 cd "$BUILD_DIR"
 
 mkdir "$BUILD_DIR/$FULL_PKG_NAME/DEBIAN"
-sed "s|@_NAME_@|$PKG_NAME|g ;
-	 s|@_VERSION_@|$PKG_VERSION|g ;
-	 s|@_BUILD_@|$PKG_BUILD|g ;
-     s|@_DESCRIPTION_@|$PKG_DESCRIPTION|g" \
-		 "$SCRIPT_DIR/control.in" > "$FULL_PKG_NAME/DEBIAN/control"
+"$PROJECT_DIR/tools/substitute.sh" "$SCRIPT_DIR/control.in" "$FULL_PKG_NAME/DEBIAN/control" \
+								   'NAME' "$PKG_NAME" \
+								   'VERSION' "$PKG_VERSION" \
+								   'BUILD' "$PKG_BUILD" \
+								   'DESCRIPTION' "$PKG_DESCRIPTION"
 
 # building archive
 
