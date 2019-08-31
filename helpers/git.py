@@ -16,15 +16,15 @@ def git_update():
 def git_checkout_date(date, hour):
     rev_list = run_command('git rev-list -n 1 --before="' + str(date) + ' ' + str(hour) + '" master')
     if rev_list.returncode is not 0:
-        raise GitException("Cannot find last commit before " + date + " 23:42")
+        raise GitException("Cannot find last commit before " + str(date) + " 23:42")
     git_checkout_tag(rev_list.stdout)
 
 
 def git_checkout_tag(tag):
     run_command("git stash")
-    res = run_command("git checkout " + tag)
+    res = run_command("git checkout " + str(tag))
     if res.returncode is not 0:
-        raise GitException("Cannot checkout " + tag)
+        raise GitException("Cannot checkout " + str(tag))
 
 
 def git_clone(repo, dest, tag=None):
