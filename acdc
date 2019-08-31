@@ -3,7 +3,7 @@
 PYTHON_VERSION=3.6.9
 DATA_DIR=@_DATA_DIR_@
 PYENV_ROOT="$HOME/.pyenv"
-PATH="$PYENV_ROOT/versions/$PYTHON_VERSION/bin:$PATH:$HOME/.local/bin"
+PATH="$PYENV_ROOT/versions/$PYTHON_VERSION/bin:$HOME/.local/bin:$PATH"
 INSTALL_DIR="@_INSTALL_DIR_@"
 
 cd "$INSTALL_DIR"
@@ -68,7 +68,7 @@ then
 
 	if [ "$(which pipenv 2> /dev/null)" = "$HOME/.local/bin/pipenv" ] && confirm 'Uninstall pipenv'
 	then
-	    pip3 uninstall --user pipenv
+	    pip3 uninstall pipenv
 	fi
 
 	if [ "$(stat -c '%U' .)" = "$USER" ]
