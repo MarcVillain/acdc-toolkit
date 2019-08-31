@@ -23,7 +23,7 @@ function confirm()
 
 function update_pipenv()
 {
-	REQUIRED="$(md5sum Pipfile.lock | sed 's/\s.*//')"
+	REQUIRED="$(shasum Pipfile.lock | sed 's/\s.*//')"
 	INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
 
 	if [ "$INSTALLED" != $REQUIRED ]
