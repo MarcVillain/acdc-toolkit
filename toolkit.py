@@ -224,9 +224,10 @@ Arguments:
         logins = get_logins(args["--file"], args["LOGIN"])
         self._last_exit_status = cmd_tag(
             args["TP_SLUG"],
-            args["YYYY-MM-DD"],
             args["--name"],
+            args["YYYY-MM-DD"],
             logins)
+
         return False
 
     def complete_tag(self, text, line, begidx, endidx):
