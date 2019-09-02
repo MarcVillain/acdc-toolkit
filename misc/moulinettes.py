@@ -391,7 +391,7 @@ class _CsCorrectingSession(_CorrectingSession):
 
 
     def __get_project_dirs(self):
-        csproj_files = [
+        sln_files = [
             path
             for path in
             folder_find(
@@ -399,7 +399,7 @@ class _CsCorrectingSession(_CorrectingSession):
                 excludes=['\\..*', '.*Tests.*', '.*Correction.*'],
                 depth=3)
             if path.endswith('.sln') ]
-        project_dirs = [ os.path.dirname(path) for path in csproj_files ]
+        project_dirs = [ os.path.dirname(path) for path in sln_files ]
         project_dirs.sort(key=os.path.basename)
         return project_dirs
 
