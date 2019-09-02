@@ -13,48 +13,73 @@ ask_string()
 	fi
 }
 
+maybe_sudo()
+{
+	"$@" 2> /dev/null || sudo "$@"
+	return $?
+}
 
-# CONFIG
 
+# Config
 
 if [ "$INTERACTIVE" = false ]
 then
 	PREFIX="${PREFIX:-/usr}"
 	USE_BIN=${USE_BIN:-true}
-	DATA_DIR='~/.acdc' # passed verbatim during substitution
+	DEFAULT_LOCAL_PREFIX="${DEFAULT_LOCAL_PREFIX:-~/.local}"
+	DEFAULT_DATA_DIR="${DEFAULT_DATA_DIR:-~/.acdc}"
 else
 	INTERACTIVE=true
 
 	if [ -z "$PREFIX" ]
 	then
-		ask_string "Choose an installation prefix" /usr
+		ask_string "Choose an installation prefix" '/usr'
 		PREFIX="$(eval echo "$ANSWER")"
+
+		mkdir -p "$PREFIX"
 	fi
 
-	if [ -z "$DATA_DIR" ]
+	if [ -z "$DEFAULT_LOCAL_PREFIX" ]
+	then
+		if [ -w "$PREFIX" ]
+		then
+			DEFAULT_LOCAL_PREFIX="$PREFIX"
+		else
+			ask_string "Choose an user-writeable installation prefix" '~/.local'
+			DEFAULT_LOCAL_PREFIX="$(eval echo "$ANSWER")"
+		fi
+	fi
+
+	if [ -z "$DEFAULT_DATA_DIR" ]
 	then
 		ask_string 'Choose a directory for storing data' '~/.acdc'
-		DATA_DIR="$(eval echo "$ANSWER")"
+		DEFAULT_DATA_DIR="$(eval echo "$ANSWER")"
 	fi
 
-	echo -n "Do you want to add an \"acdc\" command? [Y/n] "
-	read -r ANSWER
-	if [[ "$ANSWER" =~ ^([Yy]([Ee][Ss])?)?$ ]]
+	if [ -z "$USE_BIN" ]
 	then
-		USE_BIN=true
-	else
-		USE_BIN=false
+		echo -n "Do you want to add an \"acdc\" command? [Y/n] "
+		read -r ANSWER
+		if [[ "$ANSWER" =~ ^([Yy]([Ee][Ss])?)?$ ]]
+		then
+			USE_BIN=true
+		else
+			USE_BIN=false
+		fi
 	fi
 
 	echo
 fi
 
-REL_INSTALL_DIR="$PREFIX/share/acdc-toolkit"
-INSTALL_DIR="$ROOT$REL_INSTALL_DIR"
+GIT_UPSTREAM_URL="$(git config --get remote.origin.url 2> /dev/null)"
 
 
-# CHECKS
+# Other constants
 
+INSTALL_DIR="$ROOT$PREFIX/share/acdc-toolkit"
+
+
+# Checks
 
 if [ -e "$INSTALL_DIR" ]
 then
@@ -64,22 +89,34 @@ then
 fi
 
 
-# INSTALLATION
+set -e
 
 
-mkdir -p "$INSTALL_DIR"
-cp -r ./. "$INSTALL_DIR"
+# Preparing files
 
-rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
-find "$INSTALL_DIR" -type f -exec tools/substitute.sh {} \
-	 'INSTALL_DIR' "$REL_INSTALL_DIR" \
-	 'DATA_DIR' "$DATA_DIR" \;
+BUILD_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t 'acdc-toolkit-dl')"
+
+cp -r ./. "$BUILD_DIR"
+
+maybe_sudo rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
+
+find "$BUILD_DIR" -type f -exec tools/substitute.sh {} \
+	 'PREFIX' "$PREFIX" \
+	 'USE_BIN' "$USE_BIN" \
+	 'GIT_UPSTREAM_URL' "$GIT_UPSTREAM_URL" \
+	 'DEFAULT_LOCAL_PREFIX' "$DEFAULT_LOCAL_PREFIX" \
+	 'DEFAULT_DATA_DIR' "$DEFAULT_DATA_DIR" \;
+
+
+# Installation
+
+maybe_sudo mkdir -p "$INSTALL_DIR"
+maybe_sudo cp -r "$BUILD_DIR/." "$INSTALL_DIR"
 
 if $USE_BIN
 then
-	mkdir -p "$ROOT$PREFIX/bin/"
-	cp "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
-	chmod +x "$ROOT$PREFIX/bin/acdc"
+	maybe_sudo mkdir -p "$ROOT$PREFIX/bin/"
+	maybe_sudo mv "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
 
 	if $INTERACTIVE && ! grep -q "$ROOT$PREFIX/bin" <<<"$PATH"
 	then
@@ -88,4 +125,7 @@ then
 	fi
 fi
 
-rm "$INSTALL_DIR/acdc"
+
+# Cleanup
+
+rm -rf "$BUILD_DIR"
