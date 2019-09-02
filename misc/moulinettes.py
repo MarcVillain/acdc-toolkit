@@ -396,10 +396,9 @@ class _CsCorrectingSession(_CorrectingSession):
             for path in
             folder_find(
                 self.dir(),
-                includes=['.*\\.csproj'],
                 excludes=['\\..*', '.*Tests.*', '.*Correction.*'],
                 depth=3)
-            if path.endswith('.csproj') ]
+            if path.endswith('.sln') ]
         project_dirs = [ os.path.dirname(path) for path in csproj_files ]
         project_dirs.sort(key=os.path.basename)
         return project_dirs
@@ -431,6 +430,7 @@ class _CsCorrectingSession(_CorrectingSession):
         Register a project and copy its files into the session
         directory. Also check for common mistakes in source trees.
         """
+        assert(os.path.isdir(dest_dir))
         self.__project_dirs.append(dest_dir)
         project_name = os.path.basename(dest_dir)
         pb_item =  'Project "{0}"'.format(project_name)
@@ -440,15 +440,17 @@ class _CsCorrectingSession(_CorrectingSession):
             self.problems().add(pb_item, 'not found')
             return
         # Copying files
-        pending = [ os.path.curdir ]
+        pending = [ (src_dir, dest_dir) ]
         while len(pending) > 0:
-            cur_src_dir = os.path.join(src_dir, pending.pop())
+            cur_src_dir, cur_dest_dir = pending.pop()
             for entry in os.listdir(cur_src_dir):
                 src = os.path.join(cur_src_dir, entry)
-                dest = os.path.join(dest_dir, entry)
+                dest = os.path.join(cur_dest_dir, entry)
                 if os.path.isdir(src):
-                    os.makedirs(dest)
-                    pending.append(entry)
+                    if not os.path.exists(dest):
+                        os.makedirs(dest)
+                    if os.path.isdir(dest):
+                        pending.append((src, dest))
                 else:
                     shutil.copy(src, dest)
         # Adjusting files
