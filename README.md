@@ -43,6 +43,9 @@ sudo ./install
 acdc # the first run will install the remaining tools
 ```
 
+For installing the program into your AFS, you can simply use `~/afs/.local` as the installation prefix
+and `~/afs/.acdc` for your data directory.
+
 ## Run
 
 ```
