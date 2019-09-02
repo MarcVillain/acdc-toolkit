@@ -24,7 +24,8 @@ class _ReadlineHistory:
     def pop(self):
         self.save()
         self.__stack.pop()
-        self.__read()
+        if len(self.__stack) > 0:
+            self.__read()
 
 
     def save(self):
