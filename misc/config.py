@@ -1,6 +1,6 @@
 import os
 
-ACDC_YEAR = 2021
+ACDC_YEAR = 2022
 SUP_YEAR = ACDC_YEAR + 2
 
 TOOLKIT_FOLDER = os.path.dirname(os.path.dirname(__file__))
