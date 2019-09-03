@@ -109,6 +109,7 @@ class CommandDispatcher(cmd.Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+                self._last_exit_status = EXIT_FAILURE
                 self.postloop()
 
     def postloop(self):
