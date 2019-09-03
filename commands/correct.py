@@ -25,7 +25,7 @@ from helpers.io import folder_ls, folder_find, folder_exists, folder_create, par
 from misc.config import STUDENTS_FOLDER, MOULINETTE_FOLDER, REPO_FOLDER, EXIT_SUCCESS, HISTORY_FILE, CORRECTION_HISTORY_FILE, HISTORY_SIZE
 from misc.printer import print_info, print_error, print_success, print_current_exception
 from misc.data import Tp, Submission
-from misc.moulinettes import DownloadPolicy
+from misc.moulinettes import DownloadPolicy, CorrectingSession
 from helpers.autocomplete import CmdCompletor, filter_proposals, enum_logins_for_tp
 from helpers.readline_history import readline_history
 
@@ -39,6 +39,10 @@ class CorrectingSessionSet:
         self.__moulinette = moulinette
         self.__sessions = []
         self.__current_index = 0
+
+
+    def list(self):
+        return self.__sessions
 
 
     def current(self):
@@ -367,6 +371,35 @@ Prints the file tree for the current submission."""
             raise _BadUsageException()
         root = self.__sessions.current().submission().local_dir()
         run_shell_command('tree -aCI ".git|.gitignore" '+root+' | less -R')
+        return False
+
+
+    @_cmd
+    def do_trish(self, args):
+        """Usage: trish [LOGIN LOGIN...]
+
+Runs the Trish program and prints a ranking of the worst cheaters."""
+        if len(args) != 0 and len(args) < 2:
+            raise _BadUsageException()
+        logins = set(args) if len(args) != 0 else None
+        scores = []
+        for i in range(len(self.__sessions.list())):
+            sessionA = self.__sessions.list()[i]
+            loginA = sessionA.submission().login()
+            if logins is not None and loginA not in logins:
+                continue
+            for j in range(i + 1, len(self.__sessions.list())):
+                sessionB = self.__sessions.list()[j]
+                loginB = sessionB.submission().login()
+                if logins is not None and loginB not in logins:
+                    continue
+                score = CorrectingSession.run_trish(sessionA, sessionB)
+                scores.append((score, sessionA, sessionB))
+        scores.sort(key=lambda x: x[0])
+        for score, sessionA, sessionB in scores:
+            loginA = sessionA.submission().login()
+            loginB = sessionB.submission().login()
+            print_info(f'{score}: {loginA} // {loginB}')
         return False
 
 

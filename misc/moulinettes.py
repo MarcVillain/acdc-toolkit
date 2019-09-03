@@ -7,7 +7,7 @@ import enum
 from abc import ABC, abstractmethod
 from xml.etree import cElementTree
 
-from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_REPO, CAMLTRACER_RELEASE_TAG, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE
+from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_REPO, CAMLTRACER_RELEASE_TAG, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE, TRISH_INSTALL_CMD
 from helpers.git import git_clone
 from helpers.io import folder_find, folder_ls, parent_dir
 from helpers.command import run_command_detached, run_command, exec_in_folder
@@ -206,7 +206,7 @@ def _read_authors(submission, problems):
     return content
 
 
-class _CorrectingSession(ABC):
+class CorrectingSession(ABC):
     # Private attributes:
     #   * __submission: Submission
     #   * __moulinette: Moulinette
@@ -317,8 +317,28 @@ class _CorrectingSession(ABC):
         save.end('problems')
 
 
+    @abstractmethod
     def _init_session(self):
         pass
+
+
+    @abstractmethod
+    def _get_submitted_source_files(self):
+        pass
+
+
+    def run_trish(sessionA, sessionB):
+        if shutil.which('trish') is None:
+            run_command(TRISH_INSTALL_CMD)
+        score = 0
+        for fileA in sessionA._get_submitted_source_files():
+            fileB = os.path.join(
+                sessionB.submission().local_dir(),
+                os.path.relpath(fileA, sessionA.submission().local_dir()))
+            output = run_command(f'trish "{fileA}" "{fileB}"')
+            output.check_returncode()
+            score += float(output.stdout)
+        return score
 
 
 class _CsMoulinette(Moulinette):
@@ -369,7 +389,7 @@ class _CsMoulinette(Moulinette):
         return _CsCorrectingSession(submission)
 
 
-class _CsCorrectingSession(_CorrectingSession):
+class _CsCorrectingSession(CorrectingSession):
     # Private attributes:
     #   * __project_dirs
 
@@ -494,6 +514,13 @@ class _CsCorrectingSession(_CorrectingSession):
             self.__init_project(project_dir)
 
 
+    def _get_submitted_source_files(self):
+        return folder_find(
+            self.submission().local_dir(),
+            includes=['.*\\.cs'],
+            excludes=['AssemblyInfo.cs'])
+
+
 class _CamlMoulinette(Moulinette):
     def __init__(self, tp, dl_policy):
         super().__init__(tp, dl_policy)
@@ -521,7 +548,7 @@ class _CamlMoulinette(Moulinette):
         run_command('pip install '+CAMLTRACER_LOCAL_DIR)
 
 
-class _CamlCorrectingSession(_CorrectingSession):
+class _CamlCorrectingSession(CorrectingSession):
     # Private attributes:
     #   * __project_dirs
 
@@ -572,3 +599,9 @@ class _CamlCorrectingSession(_CorrectingSession):
                             if not test['passed']:
                                 self.problems().add(pb_item, 'test failed')
                                 break
+
+
+    def _get_submitted_source_files(self):
+        return folder_find(
+            self.submission().local_dir(),
+            includes=['.*\\.(ml|mli|caml|ocaml)'])

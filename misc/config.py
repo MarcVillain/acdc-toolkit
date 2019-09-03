@@ -28,6 +28,8 @@ CAMLTRACER_RELEASE_TAG = '2021-release-1'
 CAMLTRACER_LOCAL_DIR = os.path.join(MOULINETTE_FOLDER, 'camltracer')
 CAMLTRACER_SETUP_PATCH_FILE = os.path.join(RES_FOLDER, 'camltracer-setup.patch')
 
+TRISH_INSTALL_CMD = 'pip3 install git+ssh://git@gitlab.com/acdc_epita/moulette/trish.git'
+
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1 # external cause
 EXIT_UNEXPECTED = 2 # bad user input/internal error/bug
