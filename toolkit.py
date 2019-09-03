@@ -20,7 +20,6 @@ from docopt import docopt, DocoptExit
 from commands.get import cmd_get, cplt_get
 from commands.list import cmd_list, cplt_list
 from commands.remove import cmd_remove, cplt_remove
-from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
 from misc.printer import print_error
 
@@ -281,14 +280,6 @@ Options:
 
     def complete_archive(self, text, line, begidx, endidx):
         return cplt_archive(text, line, begidx, endidx)
-
-    """ update """
-
-    @docopt_cmd
-    def do_update(self, args):
-        """Usage: update"""
-        self._last_exit_status = cmd_update()
-        return False
 
     """                    """
     """  Default commands  """
