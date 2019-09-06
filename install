@@ -29,6 +29,15 @@ then
 else
 	INTERACTIVE=true
 
+	if [ "$(id -u)" -eq 0 ]
+	then
+		echo 'Warning: This script is not supposed to be run as root.' >&2
+		if ! confirm 'Continue anyway' >&2
+		then
+			exit 1
+		fi
+	fi
+
 	if [ -z "$PREFIX" ]
 	then
 		ask_string "Choose an installation prefix" '/usr'

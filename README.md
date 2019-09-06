@@ -39,7 +39,7 @@ Requirements:
 ```
 git clone git@github.com:MarcVillain/acdc-toolkit.git
 cd acdc-toolkit
-sudo ./install
+./install
 acdc # the first run will install the remaining tools
 ```
 
