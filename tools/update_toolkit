@@ -1,0 +1,63 @@
+#!/bin/bash
+
+
+INSTALL_DIR='@_PREFIX_@/share/acdc-toolkit'
+
+
+if [ -z '@_GIT_UPSTREAM_URL_@' ]
+then
+	echo "The program doesn't seem to have been installed from git." >&2
+	echo "Maybe update it using your package manager." >&2
+	exit 1
+fi
+
+
+# Getting new sources
+
+DL_DIR="$(mktempdir)"
+echo "Downloading from @_GIT_UPSTREAM_URL_@"
+git clone '@_GIT_UPSTREAM_URL_@' "$DL_DIR" || exit 1
+cd "$DL_DIR"
+
+
+# Removing old installation
+
+NONCE=1
+while [ -e "$INSTALL_DIR.backup.$NONCE" ]
+do
+	((NONCE++))
+done
+INSTALL_DIR_BACKUP="$INSTALL_DIR.backup.$NONCE"
+maybe_sudo mv "$INSTALL_DIR" "$INSTALL_DIR_BACKUP" || exit 1
+
+
+# Reinstalling
+
+INTERACTIVE=false \
+		   PREFIX='@_PREFIX_@' \
+		   USE_BIN='@_USE_BIN_@' \
+		   GIT_UPSTREAM_URL='@_GIT_UPSTREAM_URL_@' \
+		   DEFAULT_LOCAL_PREFIX='@_DEFAULT_LOCAL_PREFIX_@' \
+		   DEFAULT_DATA_DIR='@_DEFAULT_DATA_DIR_@' \
+		   ./install
+
+STATUS=$?
+if [ $STATUS -ne 0 ]
+then
+	echo 'Failed to install new version. Restoring old one.' >&2
+	maybe_sudo rm -rf "$INSTALL_DIR"
+	maybe_sudo mv "$INSTALL_DIR_BACKUP" "$INSTALL_DIR"
+else
+	maybe_sudo rm -rf "$INSTALL_DIR_BACKUP"
+fi
+
+
+# Cleanup
+
+cd ..
+rm -rf "$DL_DIR"
+
+
+# All done
+
+exit $STATUS

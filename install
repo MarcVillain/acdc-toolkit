@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # args: message, default
 # puts the result into $ANSWER
 ask_string()
@@ -13,11 +14,8 @@ ask_string()
 	fi
 }
 
-maybe_sudo()
-{
-	"$@" 2> /dev/null || sudo "$@"
-	return $?
-}
+
+PATH="$PWD/tools:$PATH"
 
 
 # Config
@@ -94,7 +92,7 @@ set -e
 
 # Preparing files
 
-BUILD_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t 'acdc-toolkit-dl')"
+BUILD_DIR="$(mktempdir)"
 
 cp -r ./. "$BUILD_DIR"
 

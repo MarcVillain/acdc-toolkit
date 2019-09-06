@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Creating a temporary directory. Should work on OSX and Linux.
+
+mktemp -d 2> /dev/null || mktemp -d -t 'acdc-toolkit-tmp'
