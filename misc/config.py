@@ -5,7 +5,7 @@ SUP_YEAR = ACDC_YEAR + 2
 
 TOOLKIT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 RES_FOLDER = os.path.join(TOOLKIT_FOLDER, 'res')
-ACDC_LOCAL_FOLDER = os.path.expanduser('@_DATA_DIR_@')
+ACDC_LOCAL_FOLDER = os.getenv('ACDC_DATA_DIR') or os.path.expanduser('@_DEFAULT_DATA_DIR_@')
 
 MOULINETTE_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "moulinettes")
 STUDENTS_FOLDER = os.path.join(ACDC_LOCAL_FOLDER, "students")

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+
+INSTALL_DIR="@_PREFIX_@/share/acdc-toolkit"
+
+
+rm -f "$DATA_DIR/.installed"
+
+
+# User components
+
+pipenv --rm
+
+if confirm 'Remove local data'
+then
+	rm -rf "$DATA_DIR/"
+fi
+
+if [ "$(which pyenv 2> /dev/null)" = "$PYENV_ROOT/bin/pyenv" ] && confirm 'Uninstall pyenv'
+then
+	rm -rf "$PYENV_ROOT/"
+fi
+
+if [ "$(which pipenv 2> /dev/null)" = "$LOCAL_PREFIX/bin/pipenv" ] && confirm 'Uninstall pipenv'
+then
+	pip3 uninstall pipenv
+fi
+
+
+# Global components
+
+cd /
+maybe_sudo rm -f '@_PREFIX_@/bin/acdc'
+maybe_sudo rm -rf "$INSTALL_DIR"

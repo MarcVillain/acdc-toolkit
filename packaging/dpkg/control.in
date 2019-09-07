@@ -1,7 +1,0 @@
-Package: @_NAME_@
-Version: @_VERSION_@-@_BUILD_@
-Section: utils
-Priority: optional
-Architecture: all
-Depends: python3 (>= 3.6.0), pipenv
-Description: @_DESCRIPTION_@
