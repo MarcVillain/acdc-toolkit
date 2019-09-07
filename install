@@ -80,6 +80,11 @@ fi
 
 GIT_UPSTREAM_URL="$(git config --get remote.origin.url 2> /dev/null)"
 
+if [ -z "$INSTALL_TYPE" ] && [ -n "$GIT_UPSTREAM_URL" ]
+then
+	INSTALL_TYPE='git'
+fi
+
 
 # Other constants
 
@@ -112,7 +117,8 @@ find "$BUILD_DIR" -type f -exec tools/substitute {} \
 	 'USE_BIN' "$USE_BIN" \
 	 'GIT_UPSTREAM_URL' "$GIT_UPSTREAM_URL" \
 	 'DEFAULT_LOCAL_PREFIX' "$DEFAULT_LOCAL_PREFIX" \
-	 'DEFAULT_DATA_DIR' "$DEFAULT_DATA_DIR" \;
+	 'DEFAULT_DATA_DIR' "$DEFAULT_DATA_DIR" \
+	 'INSTALL_TYPE' "$INSTALL_TYPE" \;
 
 
 # Installation

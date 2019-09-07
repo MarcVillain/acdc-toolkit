@@ -13,7 +13,7 @@ mkdir "$BUILD_DIR/$FULL_PKG_NAME"
 
 cd "$PROJECT_DIR"
 export PREFIX
-INTERACTIVE=false ROOT="$BUILD_DIR/$FULL_PKG_NAME" ./install
+INTERACTIVE=false ROOT="$BUILD_DIR/$FULL_PKG_NAME" INSTALL_TYPE='debian-package' ./install
 
 # building DEBIAN/ dir
 

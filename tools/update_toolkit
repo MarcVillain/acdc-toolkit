@@ -1,8 +1,58 @@
 #!/bin/bash
 
 
-INSTALL_DIR='@_PREFIX_@/share/acdc-toolkit'
+# === Arch Linux Package ===
 
+
+if [ '@_INSTALL_TYPE_@' = 'arch-linux-package' ]
+then
+	if pacman -Si acdc-toolkit > /dev/null 2> /dev/null
+	then
+		echo 'Please just upgrade your system as usual.' >&2
+		exit 1
+	fi
+
+	TMP_DIR="$(mktempdir)"
+
+	if git clone --depth=1 'https://gitlab.com/Fiksd/epita-acdc-pkgs.git' "$TMP_DIR"
+	then
+		echo 'Failed to download package.' >&2
+		rmdir "$TMP_DIR"
+		exit 1
+	fi
+
+	sudo pacman -U "$(ls -1 "$TMP_DIR/"*.pkg.* | sort -V | tail -n 1)"
+	STATUS=$?
+
+	rm -rf "$TMP_DIR"
+	exit $STATUS
+fi
+
+
+# === Debian Package ===
+
+
+if [ '@_INSTALL_TYPE_@' = 'debian-package' ]
+then
+	if git clone --depth=1 'https://gitlab.com/Fiksd/epita-acdc-pkgs.git' "$TMP_DIR"
+	then
+		echo 'Failed to download package.' >&2
+		rmdir "$TMP_DIR"
+		exit 1
+	fi
+
+	sudo gdebi "$(ls -1 "$TMP_DIR/"*.deb | sort -V | tail -n 1)"
+	STATUS=$?
+
+	rm -rf "$TMP_DIR"
+	exit $STATUS
+fi
+
+
+# === From Git ===
+
+
+INSTALL_DIR='@_PREFIX_@/share/acdc-toolkit'
 
 if [ -z '@_GIT_UPSTREAM_URL_@' ]
 then
@@ -16,7 +66,7 @@ fi
 
 DL_DIR="$(mktempdir)"
 echo "Downloading from @_GIT_UPSTREAM_URL_@"
-git clone '@_GIT_UPSTREAM_URL_@' "$DL_DIR" || exit 1
+git clone --depth=1 '@_GIT_UPSTREAM_URL_@' "$DL_DIR" || exit 1
 cd "$DL_DIR"
 
 

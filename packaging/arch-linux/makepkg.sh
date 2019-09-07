@@ -12,7 +12,7 @@ mkdir -p "$BUILD_DIR/$PKG_NAME-$PKG_VERSION"
 
 cd "$PROJECT_DIR"
 export PREFIX
-INTERACTIVE=false ROOT="$BUILD_DIR/$PKG_NAME-$PKG_VERSION" ./install
+INTERACTIVE=false ROOT="$BUILD_DIR/$PKG_NAME-$PKG_VERSION" INSTALL_TYPE='arch-linux-package' ./install
 
 cd "$BUILD_DIR"
 tar --remove-files -cjf files.tar.xz "$PKG_NAME-$PKG_VERSION"
