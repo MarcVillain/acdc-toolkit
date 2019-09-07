@@ -12,7 +12,7 @@ from helpers.other import get_logins
 from misc.config import EXIT_SUCCESS, EXIT_UNEXPECTED
 
 from commands.tag import cmd_tag, cplt_tag
-from misc.config import HISTORY_FILE, HISTORY_SIZE
+from misc.config import HISTORY_FILE, HISTORY_SIZE, EXIT_FAILURE
 from helpers.readline_history import readline_history
 
 from docopt import docopt, DocoptExit
