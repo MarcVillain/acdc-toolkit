@@ -51,7 +51,7 @@ sed "$SED_SCRIPT" "$SRC_FILE" > "$TMP_FILE"
 
 if [ "$TMP_FILE" != "$DEST_FILE" ]
 then
-	MODE=$(find "$DEST_FILE" -printf '%#m')
+	MODE=$(stat --format='%a' "$DEST_FILE" 2> /dev/null || stat -f '%OLp' "$DEST_FILE")
 	mv -f "$TMP_FILE" "$DEST_FILE"
 	chmod "$MODE" "$DEST_FILE"
 fi
