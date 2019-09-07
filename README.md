@@ -52,6 +52,20 @@ and `~/afs/.acdc` for your data directory.
 42sh$ acdc
 ```
 
+## Update
+
+If you installed the toolkit from a package maneger, upgrade it using the same method.
+Otherwise, you can run:
+```
+42sh$ acdc update
+```
+
+## Uninstall
+
+```
+42sh$ acdc uninstall
+```
+
 ## Contribute
 
 `dev` is for development. `master` is for releases. Don't break `master`.
