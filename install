@@ -107,7 +107,7 @@ cp -r ./. "$BUILD_DIR"
 
 maybe_sudo rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
 
-find "$BUILD_DIR" -type f -exec tools/substitute.sh {} \
+find "$BUILD_DIR" -type f -exec tools/substitute {} \
 	 'PREFIX' "$PREFIX" \
 	 'USE_BIN' "$USE_BIN" \
 	 'GIT_UPSTREAM_URL' "$GIT_UPSTREAM_URL" \

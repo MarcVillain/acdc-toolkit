@@ -21,13 +21,13 @@ tar --remove-files -cjf files.tar.xz "$PKG_NAME-$PKG_VERSION"
 
 cd "$SCRIPT_DIR"
 
-"$PROJECT_DIR/tools/substitute.sh" PKGBUILD.in "$BUILD_DIR/PKGBUILD" \
-								   'NAME' "$PKG_NAME" \
-								   'VERSION' "$PKG_VERSION" \
-								   'BUILD' "$PKG_BUILD" \
-								   'DESCRIPTION' "$PKG_DESCRIPTION" \
-								   'URL' "$PKG_URL" \
-								   'PREFIX' "$PREFIX"
+"$PROJECT_DIR/tools/substitute" PKGBUILD.in "$BUILD_DIR/PKGBUILD" \
+								'NAME' "$PKG_NAME" \
+								'VERSION' "$PKG_VERSION" \
+								'BUILD' "$PKG_BUILD" \
+								'DESCRIPTION' "$PKG_DESCRIPTION" \
+								'URL' "$PKG_URL" \
+								'PREFIX' "$PREFIX"
 
 cd "$BUILD_DIR"
 
