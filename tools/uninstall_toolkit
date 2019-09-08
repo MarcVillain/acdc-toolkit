@@ -13,17 +13,17 @@ pipenv --rm
 
 if confirm 'Remove local data'
 then
-	rm -rf "$DATA_DIR/"
+    rm -rf "$DATA_DIR/"
 fi
 
 if [ "$(which pyenv 2> /dev/null)" = "$PYENV_ROOT/bin/pyenv" ] && confirm 'Uninstall pyenv'
 then
-	rm -rf "$PYENV_ROOT/"
+    rm -rf "$PYENV_ROOT/"
 fi
 
 if [ "$(which pipenv 2> /dev/null)" = "$LOCAL_PREFIX/bin/pipenv" ] && confirm 'Uninstall pipenv'
 then
-	pip3 uninstall pipenv
+    pip3 uninstall pipenv
 fi
 
 

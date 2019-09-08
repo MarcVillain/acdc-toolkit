@@ -10,13 +10,13 @@ TARGET_WD="$(pwd)"
 
 if [ -z "$LOCAL_PREFIX" ]
 then
-	LOCAL_PREFIX=@_DEFAULT_LOCAL_PREFIX_@
+    LOCAL_PREFIX=@_DEFAULT_LOCAL_PREFIX_@
 fi
 export LOCAL_PREFIX
 
 if [ -z "$DATA_DIR" ]
 then
-	DATA_DIR=@_DEFAULT_DATA_DIR_@
+    DATA_DIR=@_DEFAULT_DATA_DIR_@
 fi
 export DATA_DIR
 
@@ -29,7 +29,7 @@ INSTALL_DIR="$PREFIX/share/acdc-toolkit"
 export PYENV_ROOT="$HOME/.pyenv"
 if ! [ -d "$PYENV_ROOT" ]
 then
-	PYENV_ROOT="$LOCAL_PREFIX/share/pyenv"
+    PYENV_ROOT="$LOCAL_PREFIX/share/pyenv"
 fi
 
 export WORKON_HOME="$LOCAL_PREFIX/share/virtualenvs"
@@ -45,45 +45,45 @@ cd "$INSTALL_DIR"
 
 if [ $# -eq 1 ] && [ "$1" = 'uninstall' ]
 then
-	uninstall_toolkit
-	exit $?
+    uninstall_toolkit
+    exit $?
 elif [ $# -eq 1 ] && [ "$1" = 'update' ]
 then
     update_toolkit
-	exit $?
+    exit $?
 else
-	REQUIRED="$(shasum Pipfile.lock | sed 's/\s.*//')"
-	INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
+    REQUIRED="$(shasum Pipfile.lock | sed 's/\s.*//')"
+    INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
 
-	if [ "$INSTALLED" != $REQUIRED ]
-	then
-		if ! which pipenv > /dev/null 2> /dev/null
-		then
-			pip3 install --user pipenv
-		fi
+    if [ "$INSTALLED" != $REQUIRED ]
+    then
+        if ! which pipenv > /dev/null 2> /dev/null
+        then
+            pip3 install --user pipenv
+        fi
 
-		if ! which pyenv > /dev/null 2> /dev/null
-		then
-			if confirm 'Pyenv could not be found. Install it'
-			then
-				curl 'https://pyenv.run' | bash
-			fi
-		fi
+        if ! which pyenv > /dev/null 2> /dev/null
+        then
+            if confirm 'Pyenv could not be found. Install it'
+            then
+                curl 'https://pyenv.run' | bash
+            fi
+        fi
 
-		pyenv install --skip-existing $PYTHON_VERSION
-		pipenv sync &&
-		mkdir -p "$DATA_DIR" &&
-		echo $REQUIRED > "$DATA_DIR/.installed"
-		echo
-		echo 'Hint: You can uninstall this program from your user directory'
-		echo 'by running "'"$0"' uninstall".'
-	fi
+        pyenv install --skip-existing $PYTHON_VERSION
+        pipenv sync &&
+        mkdir -p "$DATA_DIR" &&
+        echo $REQUIRED > "$DATA_DIR/.installed"
+        echo
+        echo 'Hint: You can uninstall this program from your user directory'
+        echo 'by running "'"$0"' uninstall".'
+    fi
 
-	if ! env | grep -q '^ACDC_DEBUG='
-	then
-		export PYTHONOPTIMIZE=TRUE
-	fi
+    if ! env | grep -q '^ACDC_DEBUG='
+    then
+        export PYTHONOPTIMIZE=TRUE
+    fi
 
-	ACDC_DATA_DIR="$DATA_DIR" pipenv run ./toolkit.py --working-directory="$TARGET_WD" "$@"
-	exit $?
+    ACDC_DATA_DIR="$DATA_DIR" pipenv run ./toolkit.py --working-directory="$TARGET_WD" "$@"
+    exit $?
 fi

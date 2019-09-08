@@ -6,15 +6,15 @@
 
 while true
 do
-	echo -n "$1 [Y/n]? "
+    echo -n "$1 [Y/n]? "
 
-	read ANSWER
+    read ANSWER
 
-	if [[ "$ANSWER" =~ ^([Yy][eEsS]*)?$ ]]
-	then
-		exit 0
-	elif [[ "$ANSWER" =~ ^[Nn][oO]*? ]]
-	then
-		exit 1
-	fi
+    if [[ "$ANSWER" =~ ^([Yy][eEsS]*)?$ ]]
+    then
+        exit 0
+    elif [[ "$ANSWER" =~ ^[Nn][oO]*? ]]
+    then
+        exit 1
+    fi
 done

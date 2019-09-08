@@ -7,12 +7,12 @@ PREFIX=/usr
 
 while ! [[ "$PKG_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]
 do
-	echo -n "Package version (e.g. 1.0): "
-	read -r PKG_VERSION
+    echo -n "Package version (e.g. 1.0): "
+    read -r PKG_VERSION
 done
 
 while ! [[ "$PKG_BUILD" =~ ^[1-9][0-9]*$ ]]
 do
-	echo -n "Build number (e.g. 1): "
-	read -r PKG_BUILD
+    echo -n "Build number (e.g. 1): "
+    read -r PKG_BUILD
 done
