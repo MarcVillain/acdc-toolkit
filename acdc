@@ -52,11 +52,15 @@ then
     update_toolkit
     exit $?
 else
-    REQUIRED="$(shasum Pipfile.lock | sed 's/\s.*//')"
+    REQUIRED="$(shasum Pipfile.lock | cut -d' ' -f1)"
     INSTALLED="$(cat "$DATA_DIR/.installed" 2> /dev/null)"
 
     if [ "$INSTALLED" != $REQUIRED ]
     then
+        echo "Found incomplete or broken installation."
+        echo "$REQUIRED" > "$DATA_DIR/.installed"
+
+        echo "Installing dependencies"
         if ! which pipenv > /dev/null 2> /dev/null
         then
             pip3 install --user pipenv
@@ -74,9 +78,10 @@ else
         pipenv sync &&
         mkdir -p "$DATA_DIR" &&
         echo $REQUIRED > "$DATA_DIR/.installed"
-        echo
+        echo ''
         echo 'Hint: You can uninstall this program from your user directory'
         echo 'by running "'"$0"' uninstall".'
+        echo ''
     fi
 
     if ! env | grep -q '^ACDC_DEBUG='
