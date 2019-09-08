@@ -74,8 +74,14 @@ else
             USE_BIN=false
         fi
     fi
+fi
 
-    echo
+echo 'Installing...'
+echo ''
+
+if ! man sed | grep GNU; then
+    echo '[WARN] Not a GNU-based operating system.'
+    echo '[INFO] Please ignore all the sed errors.'
 fi
 
 GIT_UPSTREAM_URL="$(git config --get remote.origin.url 2> /dev/null)"
