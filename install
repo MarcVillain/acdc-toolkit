@@ -79,7 +79,7 @@ fi
 echo 'Installing...'
 echo ''
 
-if ! man sed | grep GNU; then
+if ! man sed | grep -q GNU; then
     echo '[WARN] Not a GNU-based operating system.'
     echo '[INFO] Please ignore all the sed errors.'
 fi
