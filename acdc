@@ -4,7 +4,6 @@
 # Config
 
 PREFIX='@_PREFIX_@'
-USE_BIN='@_USE_BIN_@'
 GIT_UPSTREAM_URL='@_GIT_UPSTREAM_URL_@'
 TARGET_WD="$(pwd)"
 
@@ -39,7 +38,7 @@ PATH="$INSTALL_DIR/tools:$PYENV_ROOT/versions/$PYTHON_VERSION/bin:$LOCAL_PREFIX/
 export PYTHONUSERBASE="$LOCAL_PREFIX"
 
 
-#
+# Run the command
 
 cd "$INSTALL_DIR"
 

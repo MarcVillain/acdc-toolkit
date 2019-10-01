@@ -43,8 +43,8 @@ cd acdc-toolkit
 acdc # the first run will install the remaining tools
 ```
 
-For installing the program into your AFS, you can simply use `~/afs/.local` as the installation prefix
-and `~/afs/.acdc` for your data directory.
+For installing the program into your AFS, you can simply use `~/afs/.local` as the installation folder
+and `~/afs/.acdc` as the data folder.
 
 ## Run
 
@@ -54,7 +54,7 @@ and `~/afs/.acdc` for your data directory.
 
 ## Update
 
-If you installed the toolkit from a package maneger, upgrade it using the same method.
+If you installed the toolkit from a package manager, upgrade it using the same method.
 Otherwise, you can run:
 ```
 42sh$ acdc update
