@@ -45,7 +45,7 @@ def file_replace(file_path, text_to_search, replacement_text):
             print(line.replace(text_to_search, replacement_text), end='')
 
 
-def folder_ls(folder_path, includes=None, excludes=None):
+def folder_ls(folder_path=".", includes=None, excludes=None):
     if includes is None:
         includes = ['.*']
     if excludes is None:
@@ -83,6 +83,10 @@ def folder_find(folder_path, includes=None, excludes=None, list_dir=False, depth
     folders = []
     _folder_find(folder_path, folders, includes, excludes, list_dir, depth)
     return folders
+
+
+def parent_dir(path):
+    return os.path.normpath(os.path.join(path, os.path.pardir))
 
 
 def files_remove(files_paths):

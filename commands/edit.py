@@ -1,10 +1,11 @@
 import os
 
-from helpers.autocomplete import autocomplete, get_arg_number, get_arg_value, parse_args
+from helpers.autocomplete import CmdCompletor, enum_tp_slugs, enum_logins_for_tp
 from helpers.io import folder_ls
 from helpers.terminal import open_subshell
-from helpers.students import get_downloaded_students
-from misc.config import STUDENTS_FOLDER, REPO_FOLDER
+from misc.printer import print_error
+from misc.config import EXIT_SUCCESS, EXIT_FAILURE
+from misc.data import Tp, Submission
 
 
 def cmd_edit(tp_slug, login):
@@ -13,15 +14,19 @@ def cmd_edit(tp_slug, login):
     :param tp_slug: TP slug
     :param login: Student login
     """
-    open_subshell(os.path.join(STUDENTS_FOLDER, tp_slug, REPO_FOLDER.format(tp_slug=tp_slug, login=login)))
+    repo = Submission(tp_slug, login)
+    if repo.exists_locally():
+        open_subshell(repo.local_dir())
+        return EXIT_SUCCESS
+    else:
+        print_error('Repository not found locally.')
+        return EXIT_FAILURE
 
 
-def cplt_edit(text, line, begidx, endidx, options):
-    args = parse_args(line)
-    number = get_arg_number(args, begidx)
-    arguments = [[folder for folder in folder_ls(STUDENTS_FOLDER)
-                         if 'tp' in folder]]
-    if number > 1:
-        arguments.append(get_downloaded_students(args[1][0]))
-    return autocomplete(text, line, begidx, endidx,
-                        arguments, options)
+CPLT = CmdCompletor(
+    [],
+    {},
+    [ enum_tp_slugs, enum_logins_for_tp ])
+
+def cplt_edit(text, line, begidx, endidx):
+    return CPLT.complete(text, line, begidx, endidx)

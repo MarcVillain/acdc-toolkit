@@ -3,26 +3,23 @@
 import cmd
 import os
 import sys
+import shlex
+import traceback
 
+from commands.archive import cmd_archive, cplt_archive
 from commands.edit import cmd_edit, cplt_edit
 from helpers.other import get_logins
-
-try:
-    import readline
-
-    readline.set_completer_delims(' =')
-except ImportError:
-    readline = None
+from misc.config import EXIT_SUCCESS, EXIT_UNEXPECTED
 
 from commands.tag import cmd_tag, cplt_tag
-from misc.config import HISTORY_FILE, HISTORY_SIZE
+from misc.config import HISTORY_FILE, HISTORY_SIZE, EXIT_FAILURE
+from helpers.readline_history import readline_history
 
 from docopt import docopt, DocoptExit
 
 from commands.get import cmd_get, cplt_get
 from commands.list import cmd_list, cplt_list
 from commands.remove import cmd_remove, cplt_remove
-from commands.update import cmd_update
 from commands.correct import cmd_correct, cplt_correct
 from misc.printer import print_error
 
@@ -40,20 +37,28 @@ def docopt_cmd(func):
 
     def fn(self, arg):
         try:
-            opt = docopt(fn.__doc__, arg)
+            opt = docopt(fn.__doc__, shlex.split(arg))
 
         except DocoptExit as usage:
             print(fn.__doc__)
-            return
+            self._last_exit_status = EXIT_UNEXPECTED
+            return False
 
-        except SystemExit:
-            return
+        except SystemExit as e:
+            self._last_exit_status = e.code
+            return True
 
         try:
             return func(self, opt)
 
         except Exception as e:
-            print_error(e)
+            if __debug__:
+                print_error('An exception occured:')
+                traceback.print_exc()
+            else:
+                print_error(e)
+            self._last_exit_status = EXIT_UNEXPECTED
+            return False
 
     fn.__name__ = func.__name__
     fn.__doc__ = func.__doc__
@@ -86,9 +91,12 @@ class CommandDispatcher(cmd.Cmd):
     prompt = "ACDC Toolkit $ "
     file = None
 
-    def preloop(self):
-        if readline and os.path.exists(HISTORY_FILE):
-            readline.read_history_file(HISTORY_FILE)
+    def __init__(self):
+        self._last_exit_status = EXIT_SUCCESS
+        super().__init__()
+
+    def last_exit_status(self):
+        return self._last_exit_status
 
     def cmdloop(self, intro=None):
         if intro is None:
@@ -101,11 +109,12 @@ class CommandDispatcher(cmd.Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+                self._last_exit_status = EXIT_FAILURE
+                self.postloop()
 
     def postloop(self):
-        if readline:
-            readline.set_history_length(HISTORY_SIZE)
-            readline.write_history_file(HISTORY_FILE)
+        readline_history.save()
+
 
     """                   """
     """  Custom commands  """
@@ -121,80 +130,157 @@ class CommandDispatcher(cmd.Cmd):
 
     @docopt_cmd
     def do_get(self, args):
-        """Usage: get <tp_slug> [<login>...] [--file=<logins_file>]"""
-        tp_slug = args["<tp_slug>"]
-        logins = get_logins(args["--file"], args["<login>"])
-        cmd_get(tp_slug, logins)
+        """Usage: get TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--overwrite|--keep]
+
+Download student submissions for working on them locally.
+
+Arguments:
+  TP_SLUG  name of the concerned TP
+  LOGIN    login for witch a submission must be downloaded
+
+Options:
+  --file=LOGINS_FILE  path to a login list
+  -o, --overwrite     if already downloaded, overwrite without asking
+  -k, --keep          if already downloaded, skip without asking"""
+        tp_slug = args['TP_SLUG']
+        logins = get_logins(args['--file'], args['LOGIN'])
+        overwrite_policy = None
+        if args['--keep']:
+            overwrite_policy = False
+        elif args['--overwrite']:
+            overwrite_policy = True
+        self._last_exit_status = cmd_get(tp_slug, logins, overwrite_policy)
+        return False
 
     def complete_get(self, text, line, begidx, endidx):
-        return cplt_get(text, line, begidx, endidx,
-                        [{'name': '--file=', 'file': True}])
+        return cplt_get(text, line, begidx, endidx)
 
     """ remove """
 
     @docopt_cmd
     def do_remove(self, args):
-        """Usage: remove <tp_slug> [<login>...] [--file=<logins_file>]"""
-        logins = get_logins(args["--file"], args["<login>"])
-        cmd_remove(args['<tp_slug>'], logins)
+        """Usage: remove TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--all] [--moulinette]
+
+Remove local copies of student submissions.
+
+Arguments:
+  TP_SLUG  name of the concerned TP
+  LOGIN    login for witch a submission must be removed
+
+Options:
+  --file=LOGINS_FILE  path to a login list
+  -a, --all           remove all submissions for this TP
+  -m, --moulinette    remove the moulinette along with the submissions"""
+        remove_all = args["--all"]
+        remove_moulinette = args["--moulinette"]
+        if remove_all:
+            logins = []
+        else:
+            logins = get_logins(args["--file"], args["LOGIN"])
+        self._last_exit_status = cmd_remove(
+            args['TP_SLUG'], logins, remove_all, remove_moulinette)
+        return False
 
     def complete_remove(self, text, line, begidx, endidx):
-        return cplt_remove(text, line, begidx, endidx, [])
+        return cplt_remove(text, line, begidx, endidx)
 
     """ list """
 
     @docopt_cmd
     def do_list(self, args):
-        """Usage: list [<tp_slug>]"""
-        cmd_list(args["<tp_slug>"])
+        """Usage: list
+       list TP_SLUG
+
+In the first form, list all TPs for which submissions are available locally.
+In the the second form, list all submissions for a given TP."""
+        self._last_exit_status = cmd_list(args["TP_SLUG"])
+        return False
 
     def complete_list(self, text, line, begidx, endidx):
-        return cplt_list(text, line, begidx, endidx, [])
+        return cplt_list(text, line, begidx, endidx)
 
     """ edit """
 
     @docopt_cmd
     def do_edit(self, args):
-        """Usage: edit <tp_slug> <login>"""
-        cmd_edit(args["<tp_slug>"], args["<login>"])
+        """Usage: edit TP_SLUG LOGIN
+
+Open an interactive shell in the local copy of a student submission.
+
+Arguments:
+  TP_SLUG  corresponding TP
+  LOGIN    author of the submission"""
+        self._last_exit_status = cmd_edit(args["TP_SLUG"], args["LOGIN"])
+        return False
 
     def complete_edit(self, text, line, begidx, endidx):
-        return cplt_edit(text, line, begidx, endidx, [])
+        return cplt_edit(text, line, begidx, endidx)
 
     """ tag """
 
     @docopt_cmd
     def do_tag(self, args):
-        """Usage: tag <tp_slug> <date:yyyy-mm-dd> [<login>...] [--file=<logins_file>] [--name=<tag_name>]"""
-        logins = get_logins(args["--file"], args["<login>"])
-        cmd_tag(args["<tp_slug>"],
-                args["--name"],
-                args["<date:yyyy-mm-dd>"],
-                logins)
+        """Usage: tag TP_SLUG YYYY-MM-DD [LOGIN...] [--file=LOGINS_FILE] [--name=TAG_NAME]"""
+        logins = get_logins(args["--file"], args["LOGIN"])
+        self._last_exit_status = cmd_tag(
+            args["TP_SLUG"],
+            args["--name"],
+            args["YYYY-MM-DD"],
+            logins)
+
+        return False
 
     def complete_tag(self, text, line, begidx, endidx):
-        return cplt_tag(text, line, begidx, endidx,
-                        ['--name=', {'name': '--file=', 'file': True}])
+        return cplt_tag(text, line, begidx, endidx)
 
     """ correct """
 
     @docopt_cmd
     def do_correct(self, args):
-        """Usage: correct <tp_slug> [<login>...] [--file=<logins_file>] [-g|--get] [--no-rider]"""
-        logins = get_logins(args["--file"], args["<login>"])
-        get_rendus = args["-g"] or args["--get"]
-        cmd_correct(args["<tp_slug>"], args["--no-rider"], logins, get_rendus)
+        """Usage: correct TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--get] [--no-rider]
+
+Launches an interactive correcting session.
+
+Arguments:
+  TP_SLUG  name of the TP being corrected
+  LOGIN    students to be corrected
+
+Options:
+  --file=LOGINS_FILE path to a login list
+  -g, --get          start by downloading the submission"""
+        logins = get_logins(args["--file"], args["LOGIN"])
+        get_rendus = args["--get"]
+        self._last_exit_status = cmd_correct(
+            args["TP_SLUG"], logins, get_rendus)
+        return False
 
     def complete_correct(self, text, line, begidx, endidx):
-        return cplt_correct(text, line, begidx, endidx,
-                            ['--no-rider', {'name': '--file=', 'file': True}])
+        return cplt_correct(text, line, begidx, endidx)
 
-    """ update """
+    """ archive """
 
     @docopt_cmd
-    def do_update(self, args):
-        """Usage: update"""
-        cmd_update()
+    def do_archive(self, args):
+        """Usage: archive TP_SLUG [LOGIN...] [--file=LOGINS_FILE] [--output=OUTPUT_FILE] [--verbose]
+
+Create an archive containing several submissions.
+
+Arguments:
+  TP_SLUG  name of the TP being archived
+  LOGIN    students whose submission is to be included in the archive
+
+Options:
+  --file=LOGINS_FILE    path to a login list
+  --output=OUTPUT_FILE  path to the archive file
+  -v, --verbose         enable additional logging"""
+        logins = get_logins(args["--file"], args["LOGIN"])
+        verbose = args["--verbose"]
+        self._last_exit_status = cmd_archive(
+            args["TP_SLUG"], logins, args["--output"], verbose)
+        return False
+
+    def complete_archive(self, text, line, begidx, endidx):
+        return cplt_archive(text, line, begidx, endidx)
 
     """                    """
     """  Default commands  """
@@ -204,18 +290,22 @@ class CommandDispatcher(cmd.Cmd):
     def do_clear(self, args):
         """Usage: clear"""
         os.system("clear")
+        self._last_exit_status = EXIT_SUCCESS
+        return False
 
     @docopt_cmd
     def do_help(self, args):
-        """Usage: help [<command>]"""
-        if args["<command>"] and args["<command>"] in FUNC_DOC:
-            print(FUNC_DOC[args["<command>"]])
+        """Usage: help [COMMAND]"""
+        if args["COMMAND"] and args["COMMAND"] in FUNC_DOC:
+            print(FUNC_DOC[args["COMMAND"]])
         else:
             print("Commands:")
             for cmd in FUNC_DOC:
                 for line in str(FUNC_DOC[cmd]).splitlines():
                     if "Usage: " in line:
                         print("    " + line.replace("Usage: ", ""))
+        self._last_exit_status = EXIT_SUCCESS
+        return False
 
     @docopt_cmd
     def do_exit(self, args):
@@ -224,14 +314,33 @@ class CommandDispatcher(cmd.Cmd):
 
     def default(self, command):
         if command is "EOF":
+            self._last_exit_status = EXIT_SUCCESS
             print("exit")
             return True
-        if command is "":
-            return
-        print(str(command).split(" ")[0] + ": command not found")
+        if command is not "":
+            self._last_exit_status = EXIT_UNEXPECTED
+            print(str(command).split(" ")[0] + ": command not found")
+        return False
+
+
+def handle_global_options(argv):
+    WD_OPT='--working-directory='
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith(WD_OPT):
+            os.chdir(argv[i][len(WD_OPT):])
+            del argv[i]
+        else:
+            i += 1
 
 
 if __name__ == '__main__':
-    if os.path.dirname(sys.argv[0]) != '':
-        os.chdir(os.path.dirname(sys.argv[0]))
-    CommandDispatcher().cmdloop()
+    handle_global_options(sys.argv)
+    dispatcher = CommandDispatcher()
+    if len(sys.argv) > 1:
+        line = ' '.join(sys.argv[1:])
+        dispatcher.onecmd(line)
+        sys.exit(dispatcher.last_exit_status())
+    else:
+        readline_history.push(HISTORY_FILE, HISTORY_SIZE)
+        dispatcher.cmdloop()

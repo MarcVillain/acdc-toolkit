@@ -1,0 +1,57 @@
+#!/bin/bash
+
+
+# Usage:
+#   script FILE ( KEY VALUE )...
+#   script SRC_FILE DEST_FILE ( KEY VALUE )...
+
+function sed_escape()
+{
+    sed 's|[$.*[\\/^]|\\&|g'
+}
+
+
+SRC_FILE="$1"
+
+if (( $# % 2 == 0 ))
+then
+    DEST_FILE="$2"
+    TMP_FILE="$DEST_FILE"
+    shift 2
+else
+    DEST_FILE="$SRC_FILE"
+
+    NONCE=1
+    while [ -e "$SRC_FILE.tmp.$NONCE" ]
+    do
+        ((NONCE++))
+    done
+
+    TMP_FILE="$SRC_FILE.tmp.$NONCE"
+    touch "$TMP_FILE"
+
+    shift
+fi
+
+
+SED_SCRIPT=''
+
+while [ $# -gt 0 ]
+do
+    KEY="@_$1_@"
+    VALUE="$2"
+    shift 2
+
+    SED_SCRIPT="$SED_SCRIPT ; s/$(sed_escape <<< "$KEY")/$(sed_escape <<< "$VALUE")/g"
+done
+
+
+sed "$SED_SCRIPT" "$SRC_FILE" > "$TMP_FILE"
+
+
+if [ "$TMP_FILE" != "$DEST_FILE" ]
+then
+    MODE=$(stat --format='%a' "$DEST_FILE" 2> /dev/null || stat -f '%OLp' "$DEST_FILE")
+    mv -f "$TMP_FILE" "$DEST_FILE"
+    chmod "$MODE" "$DEST_FILE"
+fi

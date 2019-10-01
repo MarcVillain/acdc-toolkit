@@ -1,4 +1,8 @@
-import readline
+import sys
+if __debug__:
+    import traceback
+
+from helpers.readline_history import readline_history
 
 
 def print_colored_icon(color, icon, msg, indent=0, end='\n'):
@@ -21,6 +25,19 @@ def print_warning(msg, indent=0, end='\n'):
     print_colored_icon("\033[33m", "!", msg, indent=indent, end=end)
 
 
+def print_debug(msg, indent=0, end='\n'):
+    if __debug__:
+        print_colored_icon("\033[37m", "⚐", msg, indent=indent, end=end)
+
+
+def print_current_exception():
+    if __debug__:
+        print_error('An exception occured:')
+        traceback.print_exc()
+    else:
+        print_error(sys.exc_info()[1])
+
+
 def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):
     icon = "»"
     if percent_pos != -1:
@@ -39,7 +56,7 @@ def print_info(msg, indent=0, end='\n', percent_pos=-1, percent_max=-1):
 def print_ask(msg, options, indent=0):
     print_colored_icon("\033[36m", None, msg + " [" + "/".join(options) + "]", indent=indent, end=" ")
     line = input().lower()
-    readline.remove_history_item(readline.get_current_history_length() - 1)
+    readline_history.remove_last_entry()
 
     error = ''
     if len(options) == 1:
@@ -52,7 +69,7 @@ def print_ask(msg, options, indent=0):
             print()
         print_error("Please insert " + error + ":", indent=indent, end=" ")
         line = input().lower()
-        readline.remove_history_item(readline.get_current_history_length() - 1)
+        readline_history.remove_last_entry()
 
     return line
 
@@ -64,4 +81,4 @@ def print_ask_yes_no(msg, indent=0):
 def print_press_enter(msg, indent=0):
     print_colored_icon("\033[36m", None, "Press [Enter] " + msg + "...", indent=indent, end="")
     input()
-    readline.remove_history_item(readline.get_current_history_length() - 1)
+    readline_history.remove_last_entry()

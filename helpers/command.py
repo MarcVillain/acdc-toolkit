@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+from misc.printer import print_debug
 
 
 def run_command(cmd):
@@ -9,6 +10,7 @@ def run_command(cmd):
     :param cmd: The command to run
     :return: The return value of the subprocess
     """
+    print_debug('Command: ' + cmd)
     res = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     res.stdout = res.stdout.decode('utf-8')[:-1]
     res.stderr = res.stderr.decode('utf-8')[:-1]

@@ -1,0 +1,18 @@
+PKG_NAME=acdc-toolkit
+PKG_DESCRIPTION='Toolkit for releasing ACDCs from the most repetitive tasks.'
+PKG_URL='https://github.com/MarcVillain/acdc-toolkit'
+PKG_SOURCE="https://github.com/MarcVillain/acdc-toolkit/archive/v$PKG_VERSION.tar.gz"
+PREFIX=/usr
+
+
+while ! [[ "$PKG_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]
+do
+    echo -n "Package version (e.g. 1.0): "
+    read -r PKG_VERSION
+done
+
+while ! [[ "$PKG_BUILD" =~ ^[1-9][0-9]*$ ]]
+do
+    echo -n "Build number (e.g. 1): "
+    read -r PKG_BUILD
+done

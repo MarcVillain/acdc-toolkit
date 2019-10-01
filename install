@@ -1,61 +1,150 @@
-#!/bin/sh
+#!/bin/bash
 
-read -p "ACDC local folder [~/.acdc]: " -r acdc_local_folder
-acdc_local_folder=${acdc_local_folder:-"~/.acdc"}
-acdc_local_folder="${acdc_local_folder/#\~/$HOME}"
 
-# Create folder structure
-if [ -d $acdc_local_folder ]; then
-    echo "The folder $acdc_local_folder already exists."
-    read -p "Do you want to replace it?(y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -rf $acdc_local_folder
-    else
-        exit 0
+# args: message, default
+# puts the result into $ANSWER
+ask_string()
+{
+    echo -n "$1 [$2]: "
+    read -r ANSWER
+
+    if [ -z "$ANSWER" ]
+    then
+        ANSWER="$2"
+    fi
+}
+
+
+PATH="$PWD/tools:$PATH"
+
+
+# Config
+
+if [ "$INTERACTIVE" = false ]
+then
+    PREFIX="${PREFIX:-/usr}"
+    USE_BIN=${USE_BIN:-true}
+    DEFAULT_LOCAL_PREFIX="${DEFAULT_LOCAL_PREFIX:-~/.local}"
+    DEFAULT_DATA_DIR="${DEFAULT_DATA_DIR:-~/.acdc}"
+else
+    INTERACTIVE=true
+
+    if [ "$(id -u)" -eq 0 ]
+    then
+        echo 'Warning: This script is not supposed to be run as root.' >&2
+        if ! confirm 'Continue anyway' >&2
+        then
+            exit 1
+        fi
+    fi
+
+    if [ -z "$PREFIX" ]
+    then
+        ask_string "Choose an installation prefix" '/usr'
+        PREFIX="$(eval echo "$ANSWER")"
+
+        mkdir -p "$PREFIX"
+    fi
+
+    if [ -z "$DEFAULT_LOCAL_PREFIX" ]
+    then
+        if [ -w "$PREFIX" ]
+        then
+            DEFAULT_LOCAL_PREFIX="$PREFIX"
+        else
+            ask_string "Choose an user-writeable installation prefix" '~/.local'
+            DEFAULT_LOCAL_PREFIX="$(eval echo "$ANSWER")"
+        fi
+    fi
+
+    if [ -z "$DEFAULT_DATA_DIR" ]
+    then
+        ask_string 'Choose a directory for storing data' '~/.acdc'
+        DEFAULT_DATA_DIR="$(eval echo "$ANSWER")"
+    fi
+
+    if [ -z "$USE_BIN" ]
+    then
+        echo -n "Do you want to add an \"acdc\" command? [Y/n] "
+        read -r ANSWER
+        if [[ "$ANSWER" =~ ^([Yy]([Ee][Ss])?)?$ ]]
+        then
+            USE_BIN=true
+        else
+            USE_BIN=false
+        fi
     fi
 fi
 
-here=$(pwd)
-mkdir $acdc_local_folder
-mkdir $acdc_local_folder/toolkit
-shopt -s dotglob
-mv * $acdc_local_folder/toolkit
-rm -r $here
-
-# Create the 'acdc' alias
-read -p "Do you want to create an 'acdc' alias?(y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    acdc_alias="cd $acdc_local_folder/toolkit
-    pipenv run ./toolkit.py
-    if [ \"\$?\" -eq 1 ]; then
-        pipenv install
-        pipenv run ./toolkit.py
-    fi"
-
-    echo '---'
-    echo ''
-
-    cat ~/.bashrc | grep 'alias acdc' 1>/dev/null 2>/dev/null
-    if [ "$?" -eq 1 ]; then
-        echo -e "# ACDC\nalias acdc='$acdc_alias'" >> ~/.bashrc
-
-        echo 'Please run the command:'
-        echo '  42sh$ source ~/.bashrc'
-        echo ''
-    else
-        echo 'acdc alias already created'
-        echo ''
-    fi
-
-    echo 'To use the toolkit, run the command:'
-    echo '  42sh$ acdc'
-    echo ''
-fi
-
-echo "You can add/remove logins by editting the file at:"
-echo "  $acdc_local_folder/logins.txt"
+echo 'Installing...'
 echo ''
 
-echo "Toolkit successfully installed in $acdc_local_folder"
+if ! man sed | grep -q GNU; then
+    echo '[WARN] Not a GNU-based operating system.'
+    echo '[INFO] Please ignore all the sed errors.'
+fi
+
+GIT_UPSTREAM_URL="$(git config --get remote.origin.url 2> /dev/null)"
+
+if [ -z "$INSTALL_TYPE" ] && [ -n "$GIT_UPSTREAM_URL" ]
+then
+    INSTALL_TYPE='git'
+fi
+
+
+# Other constants
+
+INSTALL_DIR="$ROOT$PREFIX/share/acdc-toolkit"
+
+
+# Checks
+
+if [ -e "$INSTALL_DIR" ]
+then
+    echo 'The installation directory already exists.' >&2
+    echo 'Please uninstall the previous version first.' >&2
+    exit 1
+fi
+
+
+set -e
+
+
+# Preparing files
+
+BUILD_DIR="$(mktempdir)"
+
+cp -r ./. "$BUILD_DIR"
+
+maybe_sudo rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
+
+find "$BUILD_DIR" -type f -exec tools/substitute {} \
+     'PREFIX' "$PREFIX" \
+     'USE_BIN' "$USE_BIN" \
+     'GIT_UPSTREAM_URL' "$GIT_UPSTREAM_URL" \
+     'DEFAULT_LOCAL_PREFIX' "$DEFAULT_LOCAL_PREFIX" \
+     'DEFAULT_DATA_DIR' "$DEFAULT_DATA_DIR" \
+     'INSTALL_TYPE' "$INSTALL_TYPE" \;
+
+
+# Installation
+
+maybe_sudo mkdir -p "$INSTALL_DIR"
+maybe_sudo cp -r "$BUILD_DIR/." "$INSTALL_DIR"
+
+if $USE_BIN
+then
+    maybe_sudo mkdir -p "$ROOT$PREFIX/bin/"
+    maybe_sudo mv "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
+
+    if $INTERACTIVE && ! grep -q "$ROOT$PREFIX/bin" <<<"$PATH"
+    then
+        echo "The command has been installed in $ROOT$PREFIX/bin"
+        echo 'Please consider adding this to your $PATH.'
+    fi
+fi
+
+
+# Cleanup
+
+rm -rf "$BUILD_DIR"
