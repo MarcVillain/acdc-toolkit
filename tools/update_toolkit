@@ -84,12 +84,11 @@ maybe_sudo mv "$INSTALL_DIR" "$INSTALL_DIR_BACKUP" || exit 1
 # Reinstalling
 
 INTERACTIVE=false \
-           PREFIX='@_PREFIX_@' \
-           USE_BIN='@_USE_BIN_@' \
-           GIT_UPSTREAM_URL='@_GIT_UPSTREAM_URL_@' \
-           DEFAULT_LOCAL_PREFIX='@_DEFAULT_LOCAL_PREFIX_@' \
-           DEFAULT_DATA_DIR='@_DEFAULT_DATA_DIR_@' \
-           ./install
+   PREFIX='@_PREFIX_@' \
+   GIT_UPSTREAM_URL='@_GIT_UPSTREAM_URL_@' \
+   DEFAULT_LOCAL_PREFIX='@_DEFAULT_LOCAL_PREFIX_@' \
+   DEFAULT_DATA_DIR='@_DEFAULT_DATA_DIR_@' \
+   ./install
 
 STATUS=$?
 if [ $STATUS -ne 0 ]
