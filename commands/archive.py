@@ -7,7 +7,7 @@ from helpers.command import exec_in_folder
 from helpers.io import folder_ls, folder_find, folder_create_if_not_exists, parent_dir
 from helpers.terminal import open_subshell
 from misc.config import REPO_FOLDER, ACDC_LOCAL_FOLDER, EXIT_SUCCESS, EXIT_FAILURE
-from misc.printer import print_info, print_success
+from misc.printer import print_info, print_success, print_error
 from misc.data import Tp, Submission
 
 
@@ -65,7 +65,13 @@ def cmd_archive(tp_slug, logins, output_file, verbose):
     if len(logins) == 0:
         submissions = tp.get_local_submissions()
     else:
-        submissions = [ Submission(tp, login) for login in logins ]
+        submissions = []
+        for login in logins:
+                submission = Submission(tp, login)
+                if submission.exists_locally():
+                        submissions.append(submission)
+                else:
+                        print_error("Missing submission for {}.".format(login))
 
     archive_all(submissions, zip_file, verbose)
 
