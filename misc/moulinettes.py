@@ -524,11 +524,9 @@ class _CsCorrectingSession(CorrectingSession):
 class _CamlMoulinette(Moulinette):
     def __init__(self, tp, dl_policy):
         super().__init__(tp, dl_policy)
-        self.__dir = os.path.join(MOULINETTE_FOLDER, tp.slug())
+        self.__dir = CAMLTRACER_LOCAL_DIR
         if not os.path.isdir(CAMLTRACER_LOCAL_DIR):
             _CamlMoulinette.__install_camltracer()
-        if not os.path.isdir(self.__dir):
-            git_clone(MOULINETTE_REPO.format(tp_slug=tp.slug()), self.__dir)
 
 
     def new_correcting_session(self, submission):
