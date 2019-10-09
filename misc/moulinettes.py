@@ -335,9 +335,10 @@ class CorrectingSession(ABC):
             fileB = os.path.join(
                 sessionB.submission().local_dir(),
                 os.path.relpath(fileA, sessionA.submission().local_dir()))
-            output = run_command(f'trish "{fileA}" "{fileB}"')
-            output.check_returncode()
-            score += float(output.stdout)
+            if os.path.isfile(fileB):
+                output = run_command(f'trish "{fileA}" "{fileB}"')
+                output.check_returncode()
+                score += float(output.stdout)
         return score
 
 
