@@ -179,8 +179,12 @@ def _read_readme(submission, problems):
         re.compile(r'^READ[ _-]?ME(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
-    with open(path, 'r') as f:
-        content = f.read()
+    try:
+        with open(path, 'r', encoding='utf8') as f:
+            content = f.read()
+    except:
+        problems.add('README', 'bad encoding')
+        return ''
     if len(content) == 0:
         problems.add('README', 'empty')
     elif re.match('^\s*$', content):
@@ -197,8 +201,12 @@ def _read_authors(submission, problems):
         re.compile(r'^AUTHORS?(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
-    with open(path, 'r') as f:
-        content = f.read()
+    try:
+        with open(path, 'r', encoding='utf8') as f:
+            content = f.read()
+    except:
+        problems.add('AUTHORS', 'bad encoding')
+        return ''
     if len(content) == 0:
         problems.add('AUTHORS', 'empty')
     elif not content == '* '+submission.login()+'\n':
