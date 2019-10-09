@@ -176,7 +176,7 @@ def _read_readme(submission, problems):
     path = _find_file(
         submission, problems,
         'README',
-        re.compile(r'^READ[ _-]?ME(\\..+)?$', re.IGNORECASE))
+        re.compile(r'^READ[ _-]?ME(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
     with open(path, 'r') as f:
@@ -194,7 +194,7 @@ def _read_authors(submission, problems):
     path = _find_file(
         submission, problems,
         'AUTHORS',
-        re.compile(r'^AUTHORS?(\\..+)?$', re.IGNORECASE))
+        re.compile(r'^AUTHORS?(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
     with open(path, 'r') as f:
