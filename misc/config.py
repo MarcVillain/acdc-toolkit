@@ -2,6 +2,7 @@ import os
 
 ACDC_YEAR = 2022
 SUP_YEAR = ACDC_YEAR + 2
+SEMESTER = 's1'
 
 TOOLKIT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 RES_FOLDER = os.path.join(TOOLKIT_FOLDER, 'res')
@@ -18,7 +19,7 @@ HISTORY_SIZE = 1000
 CORRECTION_HISTORY_FILE = os.path.join(ACDC_LOCAL_FOLDER, ".correction_history")
 
 REPO_FOLDER = "{tp_slug}-{login}"
-REPO_URL = "git@git.cri.epita.fr:p/" + str(SUP_YEAR) + "-sup-tp/" + REPO_FOLDER
+REPO_URL = "git@git.cri.epita.fr:p/" + str(SUP_YEAR) + "-" + SEMESTER + "-tp/" + REPO_FOLDER
 SUBMISSION_TAG = "submission"
 
 MOULINETTE_REPO = "git@gitlab.com:acdc_epita/" + str(ACDC_YEAR) + "/{tp_slug}.git"

@@ -393,8 +393,13 @@ Runs the Trish program and prints a ranking of the worst cheaters."""
                 loginB = sessionB.submission().login()
                 if logins is not None and loginB not in logins:
                     continue
-                score = CorrectingSession.run_trish(sessionA, sessionB)
-                scores.append((score, sessionA, sessionB))
+                try:
+                    score = CorrectingSession.run_trish(sessionA, sessionB)
+                    scores.append((score, sessionA, sessionB))
+                except Exception as e:
+                    loginA = sessionA.submission().login()
+                    loginB = sessionB.submission().login()
+                    print_error(f'Trish failed to compare {loginA} and {loginB}: {e}')
         scores.sort(key=lambda x: x[0])
         for score, sessionA, sessionB in scores:
             loginA = sessionA.submission().login()

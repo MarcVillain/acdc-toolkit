@@ -176,11 +176,15 @@ def _read_readme(submission, problems):
     path = _find_file(
         submission, problems,
         'README',
-        re.compile(r'^READ[ _-]?ME(\\..+)?$', re.IGNORECASE))
+        re.compile(r'^READ[ _-]?ME(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
-    with open(path, 'r') as f:
-        content = f.read()
+    try:
+        with open(path, 'r', encoding='utf8') as f:
+            content = f.read()
+    except:
+        problems.add('README', 'bad encoding')
+        return ''
     if len(content) == 0:
         problems.add('README', 'empty')
     elif re.match('^\s*$', content):
@@ -194,11 +198,15 @@ def _read_authors(submission, problems):
     path = _find_file(
         submission, problems,
         'AUTHORS',
-        re.compile(r'^AUTHORS?(\\..+)?$', re.IGNORECASE))
+        re.compile(r'^AUTHORS?(\..+)?$', re.IGNORECASE))
     if path is None:
         return ''
-    with open(path, 'r') as f:
-        content = f.read()
+    try:
+        with open(path, 'r', encoding='utf8') as f:
+            content = f.read()
+    except:
+        problems.add('AUTHORS', 'bad encoding')
+        return ''
     if len(content) == 0:
         problems.add('AUTHORS', 'empty')
     elif not content == '* '+submission.login()+'\n':
@@ -335,9 +343,10 @@ class CorrectingSession(ABC):
             fileB = os.path.join(
                 sessionB.submission().local_dir(),
                 os.path.relpath(fileA, sessionA.submission().local_dir()))
-            output = run_command(f'trish "{fileA}" "{fileB}"')
-            output.check_returncode()
-            score += float(output.stdout)
+            if os.path.isfile(fileB):
+                output = run_command(f'trish "{fileA}" "{fileB}"')
+                output.check_returncode()
+                score += float(output.stdout)
         return score
 
 
@@ -524,11 +533,9 @@ class _CsCorrectingSession(CorrectingSession):
 class _CamlMoulinette(Moulinette):
     def __init__(self, tp, dl_policy):
         super().__init__(tp, dl_policy)
-        self.__dir = os.path.join(MOULINETTE_FOLDER, tp.slug())
+        self.__dir = CAMLTRACER_LOCAL_DIR
         if not os.path.isdir(CAMLTRACER_LOCAL_DIR):
             _CamlMoulinette.__install_camltracer()
-        if not os.path.isdir(self.__dir):
-            git_clone(MOULINETTE_REPO.format(tp_slug=tp.slug()), self.__dir)
 
 
     def new_correcting_session(self, submission):
