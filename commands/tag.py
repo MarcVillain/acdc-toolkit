@@ -53,7 +53,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
             success = False
             continue
 
-        return EXIT_SUCCESS if success else EXIT_FAILURE
+    return EXIT_SUCCESS if success else EXIT_FAILURE
 
 
 CPLT = CmdCompletor(
