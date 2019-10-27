@@ -172,7 +172,16 @@ class CommandDispatcher(cmd.Cmd):
 
     def __init__(self, sessions):
         self.__sessions = sessions
+        self.__opened_logins_cplt = CmdCompletor(
+            [],
+            {},
+            [lambda text, line: self.__enum_opened_logins(text, line)])
         super().__init__()
+
+
+    def __enum_opened_logins(self, text, line):
+        logins = self.__sessions.get_logins()
+        return [login+' ' for login in filter_proposals(logins, text)]
 
 
     def __update_prompt(self):
@@ -239,6 +248,10 @@ Switch to an already opened submission."""
         return False
 
 
+    def complete_select(self, text, line, begidx, endidx):
+        return self.__opened_logins_cplt.complete(text, line, begidx, endidx);
+
+
     @_cmd
     def do_open(self, args):
         """Usage: open LOGIN...
@@ -274,11 +287,7 @@ Close each specified session."""
 
 
     def complete_close(self, text, line, begidx, endidx):
-        cplt = CmdCompletor(
-            [],
-            {},
-            [ lambda text, line: self.__sessions.get_logins() ])
-        return cplt.complete(text, line, begidx, endidx)
+        return self.__opened_logins_cplt.complete(text, line, begidx, endidx)
 
 
     @_cmd
