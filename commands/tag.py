@@ -32,7 +32,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
         try:
             exec_in_folder(folder, git_checkout_date, date, "23:42")
             print_success("Checkout last commit before " + date + " 23:42", 1)
-        except GitException as e:
+        except Exception as e:
             print_error("Checkout: " + str(e), 1)
             success = False
             continue
@@ -40,7 +40,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
         try:
             exec_in_folder(folder, git_tag, tag_name)
             print_success("Tagging commit", 1)
-        except GitException as e:
+        except Exception as e:
             print_error("Tagging: " + str(e), 1)
             success = False
             continue
@@ -48,7 +48,7 @@ def cmd_tag(tp_slug, tag_name, date, logins):
         try:
             exec_in_folder(folder, git_push_tags)
             print_success("Tagging commit", 1)
-        except GitException as e:
+        except Exception as e:
             print_error("Tagging: " + str(e), 1)
             success = False
             continue
