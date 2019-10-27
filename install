@@ -51,10 +51,6 @@ if [ "$INTERACTIVE" = false ]; then
 
     expand_home PREFIX "$PREFIX"
     mkdir -p "$PREFIX" 2>/dev/null
-
-    mkdir -p "$DEFAULT_LOCAL_PREFIX" 2>/dev/null
-
-    mkdir -p "$DEFAULT_DATA_DIR" 2>/dev/null
 else
     INTERACTIVE=true
 
