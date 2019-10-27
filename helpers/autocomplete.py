@@ -8,16 +8,18 @@ from helpers.other import get_logins
 from misc.data import Tp, Submission
 
 
-def filter_proposals(proposals, text):
-    starting = set()
+def filter_proposals(proposals, text, prefer_prefix=True):
+    valid_set = set()
     for entry in proposals:
-        if entry[:len(text)] == text:
-            starting.add(entry)
-    containing = set()
-    for entry in proposals:
-        if text in entry[1:] and not entry in starting:
-            containing.add(entry)
-    return list(starting) + list(containing)
+        if prefer_prefix:
+            is_valid = (entry[:len(text)] == text)
+        else:
+            is_valid = (text in entry)
+        if is_valid:
+            valid_set.add(entry)
+    if prefer_prefix and len(valid_set) == 0:
+        return filter_proposals(proposals, text, False)
+    return list(valid_set)
 
 
 def enum_nothing(text, line):
