@@ -27,14 +27,16 @@ def git_checkout_tag(tag):
         raise GitException("Cannot checkout " + str(tag))
 
 
-def git_clone(repo, dest, tag=None):
+def git_clone(repo, dest, tag=None, commit=None):
+    assert(tag is None or commit is None)
+
     if os.path.exists(dest):
         raise IOError('Cannot clone, path already exists.')
 
     # If required, creating parent directory
-    containing_dir=parent_dir(dest)
-    existing_dir=containing_dir
-    created_dir=None
+    containing_dir = parent_dir(dest)
+    existing_dir = containing_dir
+    created_dir = None
     while not os.path.isdir(existing_dir):
         created_dir = existing_dir
         existing_dir = parent_dir(existing_dir)
@@ -43,11 +45,16 @@ def git_clone(repo, dest, tag=None):
 
     # Running git
     try:
-        cmd = 'git clone '+repo+' '+dest
+        options = ''
         if tag is not None:
-            cmd += ' --branch='+tag
-        if run_command(cmd).returncode is not 0:
+            options += f' --branch={tag}'
+        cmd = f'git clone{options} {repo} {dest}'
+        if run_command(cmd).returncode != 0:
             raise GitException("Cannot clone " + repo)
+        if commit is not None:
+            r = run_command(f'git -C {dest} checkout {commit}')
+            if r.returncode != 0:
+                raise GitException(f'Could not checkout {commit}.')
     except:
         if created_dir is not None:
             shutil.rmtree(created_dir)
