@@ -392,9 +392,13 @@ Runs the Trish program and prints a ranking of the worst cheaters."""
             raise _BadUsageException()
         logins = set(args) if len(args) != 0 else None
         scores = []
-        for i in range(len(self.__sessions.list())):
+        session_count = len(self.__sessions.list())
+        for i in range(session_count):
             sessionA = self.__sessions.list()[i]
             loginA = sessionA.submission().login()
+            print_info(f'Matching {loginA} to other submissions...',
+                       percent_pos=i,
+                       percent_max=session_count)
             if logins is not None and loginA not in logins:
                 continue
             for j in range(i + 1, len(self.__sessions.list())):
