@@ -14,13 +14,13 @@ class ExternalTool(ABC):
                 print_info(f'{name} is outdated, uninstalling old version...')
                 self._uninstall()
             else:
-                raise  # TODO
+                raise Exception(f'{name} is outdated.')
         if not self._is_installed():
             if may_download:
                 print_info(f'Installing {name}...')
                 self._install()
             else:
-                raise  # TODO
+                raise Exception(f'Could not find {name}.')
 
     @abstractmethod
     def _is_up_to_date(self):
