@@ -114,3 +114,16 @@ def file_insert_text_every_n_lines(file_path, text, n):
     contents = "".join(contents)
     f.write(contents)
     f.close()
+
+
+def to_tmp_path(path):
+    new_path = os.path.normpath(path)+'.tmp'
+
+    suffix = ''
+    nonce = 1
+    while os.path.exists(new_path+suffix):
+        suffix = '.'+str(nonce)
+        nonce += 1
+    new_path += suffix
+
+    return new_path

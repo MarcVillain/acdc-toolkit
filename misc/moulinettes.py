@@ -9,7 +9,7 @@ from xml.etree import cElementTree
 
 from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_REPO, CAMLTRACER_RELEASE_TAG, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE, TRISH_INSTALL_CMD
 from helpers.git import git_clone
-from helpers.io import folder_find, folder_ls, parent_dir
+from helpers.io import folder_find, folder_ls, parent_dir, to_tmp_path
 from helpers.command import run_command_detached, run_command, exec_in_folder
 from helpers.terminal import open_subshell
 from misc.printer import print_success, print_warning, print_error
@@ -563,7 +563,7 @@ class _CamlCorrectingSession(CorrectingSession):
     def open_editor(self):
         super().open_editor()
         if not 'EDITOR' in os.environ:
-            prin_error('Cannot guess editor: please export $EDITOR')
+            print_error('Cannot guess editor: please export $EDITOR')
             return
         cmd = os.environ['EDITOR']
         file_pattern = '.*\\.(ml|mli|caml|ocaml)'
