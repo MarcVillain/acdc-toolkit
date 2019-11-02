@@ -7,12 +7,13 @@ import enum
 from abc import ABC, abstractmethod
 from xml.etree import cElementTree
 
-from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_REPO, CAMLTRACER_RELEASE_TAG, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE, TRISH_INSTALL_CMD
+from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER
 from helpers.git import git_clone
 from helpers.io import folder_find, folder_ls, parent_dir, to_tmp_path
 from helpers.command import run_command_detached, run_command, exec_in_folder
 from helpers.terminal import open_subshell
 from misc.printer import print_success, print_warning, print_error
+from misc.external_tools import CamlTracer, Trish
 
 
 class Language(enum.Enum):
@@ -336,17 +337,14 @@ class CorrectingSession(ABC):
 
 
     def run_trish(sessionA, sessionB):
-        if shutil.which('trish') is None:
-            run_command(TRISH_INSTALL_CMD)
+        trish = Trish.require()
         score = 0
         for fileA in sessionA._get_submitted_source_files():
             fileB = os.path.join(
                 sessionB.submission().local_dir(),
                 os.path.relpath(fileA, sessionA.submission().local_dir()))
             if os.path.isfile(fileB):
-                output = run_command(f'trish "{fileA}" "{fileB}"')
-                output.check_returncode()
-                score += float(output.stdout)
+                score += trish.cmp_files(fileA, fileB)
         return score
 
 
@@ -533,26 +531,13 @@ class _CsCorrectingSession(CorrectingSession):
 class _CamlMoulinette(Moulinette):
     def __init__(self, tp, dl_policy):
         super().__init__(tp, dl_policy)
-        self.__dir = CAMLTRACER_LOCAL_DIR
-        if not os.path.isdir(CAMLTRACER_LOCAL_DIR):
-            _CamlMoulinette.__install_camltracer()
-
+        self.__camltracer = CamlTracer.require()
 
     def new_correcting_session(self, submission):
         return _CamlCorrectingSession(submission)
 
-
     def _run_in_current_dir(self):
-        run_command('acdc-camltracer trace --json {} .'.format(
-            os.path.join(self.__dir, 'tests.py')))
-
-
-    def __install_camltracer():
-        git_clone(CAMLTRACER_REPO, CAMLTRACER_LOCAL_DIR, CAMLTRACER_RELEASE_TAG)
-        run_command('patch {} {}'.format(
-            os.path.join(CAMLTRACER_LOCAL_DIR, 'setup.py'),
-            CAMLTRACER_SETUP_PATCH_FILE))
-        run_command('pip install '+CAMLTRACER_LOCAL_DIR)
+        self.__camltracer.run()
 
 
 class _CamlCorrectingSession(CorrectingSession):

@@ -25,11 +25,13 @@ SUBMISSION_TAG = "submission"
 MOULINETTE_REPO = "git@gitlab.com:acdc_epita/" + str(ACDC_YEAR) + "/{tp_slug}.git"
 
 CAMLTRACER_REPO = 'git@gitlab.com:acdc_epita/moulette/camltracer.git'
-CAMLTRACER_RELEASE_TAG = '2021-release-1'
+CAMLTRACER_COMMIT = '47ebbc0c171b55805f28e69148cd5af44bfc2b5b'
 CAMLTRACER_LOCAL_DIR = os.path.join(MOULINETTE_FOLDER, 'camltracer')
 CAMLTRACER_SETUP_PATCH_FILE = os.path.join(RES_FOLDER, 'camltracer-setup.patch')
 
-TRISH_INSTALL_CMD = 'pip3 install git+ssh://git@gitlab.com/acdc_epita/moulette/trish.git'
+TRISH_REPO = 'git@gitlab.com:acdc_epita/moulette/trish.git'
+TRISH_COMMIT = '6b4058efa9f2902f242224182e1977a8697849c9'
+TRISH_LOCAL_DIR = os.path.join(MOULINETTE_FOLDER, 'trish')
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1 # external cause
