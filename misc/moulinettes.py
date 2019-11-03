@@ -1,16 +1,15 @@
-import sys
 import os
 import shutil
 import re
-import json
 import enum
 from abc import ABC, abstractmethod
 from xml.etree import cElementTree
+from junitparser import JUnitXml
 
-from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER
+from misc.config import MOULINETTE_FOLDER, MOULINETTE_REPO, CORRECTIONS_FOLDER, CAMLTRACER_TESTS_DIR
 from helpers.git import git_clone
-from helpers.io import folder_find, folder_ls, parent_dir, to_tmp_path
-from helpers.command import run_command_detached, run_command, exec_in_folder
+from helpers.io import folder_find, folder_create, to_tmp_path
+from helpers.command import run_command_detached, run_command
 from helpers.terminal import open_subshell
 from misc.printer import print_success, print_warning, print_error
 from misc.external_tools import CamlTracer, Trish
@@ -531,13 +530,17 @@ class _CsCorrectingSession(CorrectingSession):
 class _CamlMoulinette(Moulinette):
     def __init__(self, tp, dl_policy):
         super().__init__(tp, dl_policy)
+        self.__test_suite = os.path.join(CAMLTRACER_TESTS_DIR, tp.slug()+'.py')
+        if not os.path.isfile(self.__test_suite):
+            folder_create(CAMLTRACER_TESTS_DIR)
+            raise Exception(f'Missing file {self.__test_suite}, please create it.')
         self.__camltracer = CamlTracer.require()
 
     def new_correcting_session(self, submission):
         return _CamlCorrectingSession(submission)
 
-    def _run_in_current_dir(self):
-        self.__camltracer.run()
+    def run(self, submission):
+        self.__camltracer.run(self.__test_suite, submission)
 
 
 class _CamlCorrectingSession(CorrectingSession):
@@ -563,34 +566,16 @@ class _CamlCorrectingSession(CorrectingSession):
         shutil.copytree(self.submission().local_dir(), self.dir())
         shutil.rmtree(os.path.join(self.dir(), '.git'))
         # Running CamlTracer
-        def run():
-            self.moulinette()._run_in_current_dir()
-        exec_in_folder(self.dir(), run)
+        self.moulinette().run(self.dir())
         # Parsing report
-        with open(os.path.join(self.dir(), 'report.json'), 'r') as f:
-            report = json.loads(f.read())
-        for exercise in report[0]['exoreports']:
-            pb_item = 'Exercise "{}"'.format(exercise['name'])
-            self.problems().add(pb_item)
-            if not exercise['found']:
-                self.problems().add(pb_item, 'not found')
-            else:
-                if len(exercise['errors']) != 0:
-                    self.problems().add(pb_item, 'caml error')
-                for func in exercise['funreports']:
-                    pb_item = 'Function "{}": "{}"'.format(
-                        exercise['name'],
-                        func['fun'])
-                    self.problems().add(pb_item)
-                    if not func['found']:
-                        self.problems().add(pb_item, 'not found')
-                    else:
-                        for warning in func['warnings']:
-                            self.problems().add(pb_item, warning)
-                        for test in func['cases']:
-                            if not test['passed']:
-                                self.problems().add(pb_item, 'test failed')
-                                break
+        tests_output_file = os.path.join(self.dir(), 'traces.xml')
+        xml = JUnitXml.fromfile(tests_output_file)
+        for suite in xml:
+            for case in suite:
+                pb_item = f'{case.classname}'
+                if case.name is not None:
+                    pb_item += f'/{case.name}'
+                self.problems().add(pb_item)
 
 
     def _get_submitted_source_files(self):

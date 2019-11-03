@@ -3,7 +3,7 @@ import shutil
 from abc import ABC, abstractmethod
 from misc.config import CAMLTRACER_REPO, CAMLTRACER_COMMIT, CAMLTRACER_LOCAL_DIR, CAMLTRACER_SETUP_PATCH_FILE, TRISH_REPO, TRISH_COMMIT, TRISH_LOCAL_DIR
 from misc.printer import print_info
-from helpers.command import run_command
+from helpers.command import run_command, exec_in_folder
 from helpers.git import git_clone
 
 
@@ -46,9 +46,14 @@ class CamlTracer(ExternalTool):
     def require():
         return CamlTracer(True)
 
-    def run(self):
-        test_file = os.path.join(CAMLTRACER_LOCAL_DIR, 'tests.py')
-        run_command(f'camltracer trace --json {test_file} .')
+    def run(self, test_suite, correction_dir):
+        # CamlTracer writes its output in its working directory
+        def run_in_pwd():
+            cmd = 'camltracer moulinette --testsuite {} --student .'.format(
+                test_suite
+            )
+            run_command(cmd)
+        exec_in_folder(correction_dir, run_in_pwd)
 
     def _is_up_to_date(self):
         if run_command(f'which camltracer').returncode != 0:

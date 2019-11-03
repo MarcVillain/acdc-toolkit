@@ -25,9 +25,10 @@ SUBMISSION_TAG = "submission"
 MOULINETTE_REPO = "git@gitlab.com:acdc_epita/" + str(ACDC_YEAR) + "/{tp_slug}.git"
 
 CAMLTRACER_REPO = 'git@gitlab.com:acdc_epita/moulette/camltracer.git'
-CAMLTRACER_COMMIT = '47ebbc0c171b55805f28e69148cd5af44bfc2b5b'
+CAMLTRACER_COMMIT = '5d4d122a8ee2408202126da70d24ccdf49c27bd9'
 CAMLTRACER_LOCAL_DIR = os.path.join(MOULINETTE_FOLDER, 'camltracer')
 CAMLTRACER_SETUP_PATCH_FILE = os.path.join(RES_FOLDER, 'camltracer-setup.patch')
+CAMLTRACER_TESTS_DIR = os.path.join(MOULINETTE_FOLDER, 'caml-tests')
 
 TRISH_REPO = 'git@gitlab.com:acdc_epita/moulette/trish.git'
 TRISH_COMMIT = '6b4058efa9f2902f242224182e1977a8697849c9'

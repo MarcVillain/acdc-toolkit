@@ -1,4 +1,4 @@
-32c32
-<         acdc=camltracer.cli:cli
+28c28
+<         acdc = acdc.cli:cli
 ---
->         camltracer=camltracer.cli:cli
+>         camltracer = acdc.cli:cli
