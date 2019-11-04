@@ -384,6 +384,17 @@ Prints the file tree for the current submission."""
 
 
     @_cmd
+    def do_test(self, args):
+        """Usage: test
+
+Run the test suite."""
+        if len(args) != 0:
+            raise _BadUsageException()
+        self.__sessions.current().test()
+        return False
+
+
+    @_cmd
     def do_trish(self, args):
         """Usage: trish [LOGIN LOGIN...]
 

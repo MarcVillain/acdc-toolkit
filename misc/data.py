@@ -9,19 +9,6 @@ from helpers.io import folder_ls
 from misc.moulinettes import Moulinette, Language
 
 
-def to_tmp_path(path):
-    new_path = os.path.normpath(path)+'.tmp'
-
-    suffix=''
-    nonce = 1
-    while os.path.exists(new_path+suffix):
-        suffix = '.'+str(nonce)
-        nonce += 1
-    new_path += suffix
-
-    return new_path
-
-
 class Tp:
     def __init__(self, slug):
         self._slug = slug

@@ -11,9 +11,10 @@ from helpers.git import git_clone
 from helpers.io import folder_find, folder_create, to_tmp_path
 from helpers.command import run_command_detached, run_command
 from helpers.terminal import open_subshell
-from misc.printer import print_success, print_warning, print_error
+from misc.printer import print_success, print_warning, print_error, print_info
 from misc.external_tools import CamlTracer, Trish
 
+# TODO: download moulinettes only after loading correcting sessions
 
 class Language(enum.Enum):
     C_SHARP = enum.auto()
@@ -299,6 +300,11 @@ class CorrectingSession(ABC):
         pass
 
 
+    @abstractmethod
+    def test(self):
+        pass
+
+
     def open_shell(self):
         open_subshell(self.__dir)
 
@@ -543,6 +549,19 @@ class _CamlMoulinette(Moulinette):
         self.__camltracer.run(self.__test_suite, submission)
 
 
+def _report_camltracer_test_case(case):
+    name = case.classname
+    if case.name:
+        name += f' / {case.name}'
+    if case.result is None:
+        print_success(f'[PASS] {name}')
+    else:
+        msg = ''
+        if case.result.message is not None:
+            msg = f': {case.result.message}'
+        print_error(f'[FAIL] {name}{msg}')
+
+
 class _CamlCorrectingSession(CorrectingSession):
     # Private attributes:
     #   * __project_dirs
@@ -550,7 +569,7 @@ class _CamlCorrectingSession(CorrectingSession):
 
     def open_editor(self):
         super().open_editor()
-        if not 'EDITOR' in os.environ:
+        if 'EDITOR' not in os.environ:
             print_error('Cannot guess editor: please export $EDITOR')
             return
         cmd = os.environ['EDITOR']
@@ -561,21 +580,20 @@ class _CamlCorrectingSession(CorrectingSession):
         run_command_detached(cmd)
 
 
+    def test(self):
+        self.moulinette().run(self.dir())
+        tests_output_file = os.path.join(self.dir(), 'traces.xml')
+        xml = JUnitXml.fromfile(tests_output_file)
+        for suite in xml:
+            print_info(f'Project "{suite.name}"')
+            for case in suite:
+                _report_camltracer_test_case(case)
+
+
     def _init_session(self):
         super()._init_session()
         shutil.copytree(self.submission().local_dir(), self.dir())
         shutil.rmtree(os.path.join(self.dir(), '.git'))
-        # Running CamlTracer
-        self.moulinette().run(self.dir())
-        # Parsing report
-        tests_output_file = os.path.join(self.dir(), 'traces.xml')
-        xml = JUnitXml.fromfile(tests_output_file)
-        for suite in xml:
-            for case in suite:
-                pb_item = f'{case.classname}'
-                if case.name is not None:
-                    pb_item += f'/{case.name}'
-                self.problems().add(pb_item)
 
 
     def _get_submitted_source_files(self):

@@ -47,7 +47,7 @@ def git_clone(repo, dest, tag=None, commit=None):
     try:
         options = ''
         if tag is not None:
-            options += f' --branch={tag}'
+            options += f' --branch={tag} --depth=1'
         cmd = f'git clone{options} {repo} {dest}'
         if run_command(cmd).returncode != 0:
             raise GitException("Cannot clone " + repo)
