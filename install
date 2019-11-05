@@ -120,7 +120,7 @@ ask_folder()
             folder="$default"
         fi
 
-        expand_home folder "$folder"
+        folder="$(eval echo $folder)"
         mkdir -p "$folder" 2>/dev/null
 
         if [ ! -w "$folder" ]; then
@@ -133,26 +133,19 @@ ask_folder()
     eval $result="'$folder'"
 }
 
-expand_home()
-{
-    result=$1
-
-    var="$2"
-    var="${var/#\~/$HOME}"
-
-    eval $result="'$var'"
-}
 
 # Make all the useful scripts available
 PATH="$PWD/tools:$PATH"
 
 # Set configuration variables
 if [ "$INTERACTIVE" = false ]; then
-    PREFIX="${PREFIX:-~/.local}"
+    if [ -z "$PREFIX" ]; then
+        PREFIX=~/.local
+    fi
+
     DEFAULT_LOCAL_PREFIX="${DEFAULT_LOCAL_PREFIX:-~/.local}"
     DEFAULT_DATA_DIR="${DEFAULT_DATA_DIR:-~/.acdc}"
 
-    expand_home PREFIX "$PREFIX"
     mkdir -p "$PREFIX" 2>/dev/null
 else
     INTERACTIVE=true
@@ -177,7 +170,6 @@ if [ -z "$INSTALL_TYPE" ] && [ -n "$GIT_UPSTREAM_URL" ]; then
 fi
 
 INSTALL_DIR="$ROOT$PREFIX/share/acdc-toolkit"
-expand_home INSTALL_DIR "$INSTALL_DIR"
 
 
 # Checks
