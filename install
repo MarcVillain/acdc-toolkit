@@ -194,9 +194,7 @@ fi
 
 BUILD_DIR="$(mktempdir)"
 
-cp -r ./. "$BUILD_DIR"
-
-maybe_sudo rm -rf "$INSTALL_DIR/packaging" "$INSTALL_DIR"/.git*
+cp -r ./* "$BUILD_DIR"
 
 find "$BUILD_DIR" -type f -exec tools/substitute {} \
      "PREFIX" "$PREFIX" \
