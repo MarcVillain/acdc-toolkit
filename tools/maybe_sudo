@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Try running the command a first time.
 # If it fails, run it again using sudo.
@@ -7,4 +7,3 @@
 
 "$@" 2> /dev/null || sudo "$@"
 exit $?
-

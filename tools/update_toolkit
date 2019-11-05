@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 
 # === Arch Linux Package ===
@@ -75,7 +75,7 @@ cd "$DL_DIR"
 NONCE=1
 while [ -e "$INSTALL_DIR.backup.$NONCE" ]
 do
-    ((NONCE++))
+    NONCE=$((NONCE + 1))
 done
 INSTALL_DIR_BACKUP="$INSTALL_DIR.backup.$NONCE"
 maybe_sudo mv "$INSTALL_DIR" "$INSTALL_DIR_BACKUP" || exit 1

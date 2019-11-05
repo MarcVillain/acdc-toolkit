@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 
 INSTALL_DIR="@_PREFIX_@/share/acdc-toolkit"
@@ -16,12 +16,12 @@ then
     rm -rf "$DATA_DIR/"
 fi
 
-if [ "$(which pyenv 2> /dev/null)" = "$PYENV_ROOT/bin/pyenv" ] && confirm 'Uninstall pyenv'
+if [ "$(command -v pyenv > /dev/null)" = "$PYENV_ROOT/bin/pyenv" ] && confirm 'Uninstall pyenv'
 then
     rm -rf "$PYENV_ROOT/"
 fi
 
-if [ "$(which pipenv 2> /dev/null)" = "$LOCAL_PREFIX/bin/pipenv" ] && confirm 'Uninstall pipenv'
+if [ "$(command -v pipenv > /dev/null)" = "$LOCAL_PREFIX/bin/pipenv" ] && confirm 'Uninstall pipenv'
 then
     pip3 uninstall pipenv
 fi

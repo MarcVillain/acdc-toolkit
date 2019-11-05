@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/bin/sh
 
 # Helper functions
 ask_folder()
 {
-    local result=$1
-    local name="$2"
-    local name_lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
-    local default="$3"
+    result=$1
+    name="$2"
+    name_lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+    default="$3"
 
-    local folder=""
+    folder=""
     while [ -z "$folder" ]; do
-        echo -n "$name folder [$default]: "
+        printf '%s folder [%s]: ' "$name" "$default"
         read -r folder
 
         if [ -z "$folder" ]; then
@@ -32,9 +32,9 @@ ask_folder()
 
 expand_home()
 {
-    local result=$1
+    result=$1
 
-    local var="$2"
+    var="$2"
     var="${var/#\~/$HOME}"
 
     eval $result="'$var'"
@@ -116,7 +116,7 @@ maybe_sudo cp -r "$BUILD_DIR/." "$INSTALL_DIR"
 maybe_sudo mkdir -p "$ROOT$PREFIX/bin/"
 maybe_sudo mv "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
 
-if $INTERACTIVE && ! grep -q "$ROOT$PREFIX/bin" <<< "$PATH" ; then
+if $INTERACTIVE && ! echo "$PATH" | grep -q "$ROOT$PREFIX/bin"; then
     echo "The command has been installed in '$ROOT$PREFIX/bin'."
     echo 'Please consider adding this to your $PATH.'
 fi
