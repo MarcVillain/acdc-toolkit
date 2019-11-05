@@ -203,11 +203,17 @@ find "$BUILD_DIR" -type f -exec tools/substitute {} \
      "DEFAULT_DATA_DIR" "$DEFAULT_DATA_DIR" \
      "INSTALL_TYPE" "$INSTALL_TYPE" \;
 
-maybe_sudo mkdir -p "$INSTALL_DIR"
-maybe_sudo cp -r "$BUILD_DIR/." "$INSTALL_DIR"
+sudo=''
+if ! mkdir "$ROOT$PREFIX" 2> /dev/null && ! touch "$ROOT$PREFIX" 2> /dev/null
+then
+    sudo='sudo'
+fi
 
-maybe_sudo mkdir -p "$ROOT$PREFIX/bin/"
-maybe_sudo mv "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
+$sudo mkdir -p "$INSTALL_DIR"
+$sudo cp -r "$BUILD_DIR/." "$INSTALL_DIR"
+
+$sudo mkdir -p "$ROOT$PREFIX/bin/"
+$sudo mv "$INSTALL_DIR/acdc" "$ROOT$PREFIX/bin/"
 
 if $INTERACTIVE && ! echo "$PATH" | grep -q "$ROOT$PREFIX/bin"; then
     echo "The command has been installed in '$ROOT$PREFIX/bin'."

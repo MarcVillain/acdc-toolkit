@@ -1,7 +1,8 @@
 #!/bin/sh
 
 
-INSTALL_DIR="@_PREFIX_@/share/acdc-toolkit"
+export PREFIX='@_PREFIX_@'
+INSTALL_DIR="$PREFIX/share/acdc-toolkit"
 
 
 rm -f "$DATA_DIR/.installed"
@@ -27,8 +28,17 @@ then
 fi
 
 
+# Trying to detect weither root privileges are required
+
+sudo=''
+if ! mkdir "$PREFIX" 2> /dev/null && ! touch "$PREFIX" 2> /dev/null
+then
+    sudo='sudo'
+fi
+
+
 # Global components
 
 cd /
-maybe_sudo rm -f '@_PREFIX_@/bin/acdc'
-maybe_sudo rm -rf "$INSTALL_DIR"
+$sudo rm -f "$PREFIX/bin/acdc"
+$sudo rm -rf "$INSTALL_DIR"

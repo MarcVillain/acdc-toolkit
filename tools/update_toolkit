@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export PREFIX='@_PREFIX_@'
+
 
 # === Arch Linux Package ===
 
@@ -62,6 +64,15 @@ then
 fi
 
 
+# Trying to detect weither root privileges are required
+
+sudo=''
+if ! mkdir "$PREFIX" 2> /dev/null && ! touch "$PREFIX" 2> /dev/null
+then
+    sudo='sudo'
+fi
+
+
 # Getting new sources
 
 DL_DIR="$(mktempdir)"
@@ -78,7 +89,7 @@ do
     NONCE=$((NONCE + 1))
 done
 INSTALL_DIR_BACKUP="$INSTALL_DIR.backup.$NONCE"
-maybe_sudo mv "$INSTALL_DIR" "$INSTALL_DIR_BACKUP" || exit 1
+$sudo mv "$INSTALL_DIR" "$INSTALL_DIR_BACKUP" || exit 1
 
 
 # Reinstalling
@@ -94,10 +105,10 @@ STATUS=$?
 if [ $STATUS -ne 0 ]
 then
     echo 'Failed to install new version. Restoring old one.' >&2
-    maybe_sudo rm -rf "$INSTALL_DIR"
-    maybe_sudo mv "$INSTALL_DIR_BACKUP" "$INSTALL_DIR"
+    $sudo rm -rf "$INSTALL_DIR"
+    $sudo mv "$INSTALL_DIR_BACKUP" "$INSTALL_DIR"
 else
-    maybe_sudo rm -rf "$INSTALL_DIR_BACKUP"
+    $sudo rm -rf "$INSTALL_DIR_BACKUP"
 fi
 
 

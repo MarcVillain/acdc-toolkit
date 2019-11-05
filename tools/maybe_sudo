@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# Try running the command a first time.
-# If it fails, run it again using sudo.
-
-# /!\ The command must not prompt the user using stderr.
-
-"$@" 2> /dev/null || sudo "$@"
-exit $?
