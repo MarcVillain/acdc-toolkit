@@ -1,5 +1,108 @@
 #!/bin/sh
 
+# Responsibilities of This Script
+# ===============================
+#
+#     This script is responsible for installing the read-only part
+# of the toolkit (see the "Install Locations" section below). All other
+# components are managed by the toolkit wrapper script.
+#
+# This separations is required for an efficient packaging strategy as
+# explained below. Packages are built by running this install script
+# in a fake root and archiving the result.
+#
+#
+# Install Locations
+# =================
+#
+#
+# Read-Only Components
+# --------------------
+#
+# * PREFIX/share/acdc-toolkit/
+# * PREFIX/bin/acdc
+#
+#     Separating read-only from writeable data enables a system-wide
+# installation. This allows the toolkit to be installed, updated and removed
+# by a package manager.
+#
+#
+# Writeable Components
+# --------------------
+#
+# * LOCAL_PREFIX/...
+# * ~/.pyenv/ (if not in LOCAL_PREFIX/)
+#
+#     In this location will be installed most pythonic components, such as the
+# toolkit's pyenv and virtualenv. It is important to understand that these
+# components are not managed by the "install" script, but by the shell wrapper
+# of the toolkit.
+#
+# The actual value of LOCAL_PREFIX normally is typically the same as
+# DEFAULT_LOCAL_PREFIX (see the "Configuration" section below), but can be
+# overriden by exporting the corresponding environment variable.
+#
+#
+# User data
+# ---------
+#
+# * DATA_DIR/...
+#
+#     This is the directory were the toolkit itself writes its data.
+# The user might have to edit files in this directory, e.g. the logins.txt file.
+#
+# Similarly to LOCAL_PREFIX, DATA_DIR defaults to DEFAULT_DATA_DIR, but can
+# be explicitly passed to the toolkit wrapper script through the environment.
+#
+#
+# Configuration
+# =============
+#
+#     Some parameters are configured during the first installation.
+# For each of the following parameters, the string @_PARAM_NAME_@ is replaced
+# in every source file by the parameter's value. This is an easy way to propagate
+# configuration to other scripts, and to the toolkit itself.
+#
+#
+# PREFIX
+# ------
+#
+#     Typically set to /usr, see the "Install Locations" section for more details
+# about the role of this value.
+#
+#
+# DEFAULT_LOCAL_PEFIX
+# -------------------
+#
+#     Typically set to ~/.local. See the "Install Locations" section. The reason
+# this parameter exists is because LOCAL_PREFIX really is a concern of the
+# wrapper script, but it is also convenient to give it a sensible default value
+# so that most users won't have to add a variable to their shell configuration
+# file.
+#
+#
+# DEFAULT_DATA_DIR
+# ----------------
+#
+#     Typically set to ~/.acdc. See the "Install Locations" section and the
+# DEFAULT_LOCAL_PREFIX parameter.
+#
+#
+# INSTALL_TYPE
+# ------------
+#
+#     One of "*-package" or "git". This is used by the wrapper script for
+# updating or uninstalling the package.
+#
+#
+# GIT_UPSTREAM_URL
+# ----------------
+#
+#     If INSTALL_TYPE is set to "git", this parameter indicates the git URL from
+# which the toolkit has been downloaded. This is used by the wrapper script for
+# performing updates.
+
+
 # Helper functions
 ask_folder()
 {
